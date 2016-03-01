@@ -1,0 +1,26 @@
+{
+    "name" : "InspectorWidgetIterator",
+    "version" : "1.0.0",
+    "main" : "dist/js/InspectorWidgetIterator.min.js",
+    "license" : "GPL-V3",
+    "ignore" : [
+        "**/.*",
+        "Gruntfile.js",
+        "package.json"
+    ],
+    "dependencies" : {
+        "amalia.js" : "https://github.com/InspectorWidget/amalia.js.git#InspectorWidget",
+		"blockly" : "https://github.com/InspectorWidget/blockly.git#master",
+		"dc.js" : "https://github.com/dc-js/dc.js.git#master"
+    },
+    "devDependencies":{
+        "qunit":"1.14.0"
+    },
+    "keywords" : [
+        "InspectorWidget",
+        "video",
+        "annotation",
+        "widget",
+        "html5"
+    ]
+}
