@@ -147,6 +147,41 @@ function drawingCallback(caller,msg) {
     }
 }
 
+Blockly.Msg.REDEFINE_TEMPLATE = 'Reselect variable...';
+
+/**
+ * Return a sorted list of variable names for variable dropdown menus.
+ * Include a special option at the end for creating a new variable name.
+ * @return {!Array.<string>} Array of variable names.
+ * @this {!Blockly.FieldVariable}
+ */
+Blockly.FieldVariable.dropdownCreate = function() {
+  if (this.sourceBlock_ && this.sourceBlock_.workspace) {
+    var variableList =
+        Blockly.Variables.allVariables(this.sourceBlock_.workspace);
+  } else {
+    var variableList = [];
+  }
+  // Ensure that the currently selected variable is an option.
+  var name = this.getText();
+  if (name && variableList.indexOf(name) == -1) {
+    variableList.push(name);
+  }
+  variableList.sort(goog.string.caseInsensitiveCompare);
+  variableList.push(Blockly.Msg.RENAME_VARIABLE);
+  variableList.push(Blockly.Msg.NEW_VARIABLE);
+  if(this.sourceBlock_ && this.sourceBlock_.type === 'template_set'){
+    variableList.push(Blockly.Msg.REDEFINE_TEMPLATE);
+  }
+  // Variables are not language-specific, use the name as both the user-facing
+  // text and the internal representation.
+  var options = [];
+  for (var x = 0; x < variableList.length; x++) {
+    options[x] = [variableList[x], variableList[x]];
+  }
+  return options;
+};
+
 Blockly.FieldVariable.dropdownChange = function(text) {
 
     function promptName(promptText, defaultText) {
@@ -157,7 +192,9 @@ Blockly.FieldVariable.dropdownChange = function(text) {
         if (newVar) {
             newVar = newVar.replace(/[\s\xa0]+/g, ' ').replace(/^ | $/g, '');
             if (newVar == Blockly.Msg.RENAME_VARIABLE ||
-                newVar == Blockly.Msg.NEW_VARIABLE) {
+                newVar == Blockly.Msg.NEW_VARIABLE ||
+                newVar == Blockly.Msg.REDEFINE_TEMPLATE
+                ) {
                 // Ok, not ALL names are legal...
                 newVar = null;
             }
@@ -165,6 +202,7 @@ Blockly.FieldVariable.dropdownChange = function(text) {
         return newVar;
     }
     var workspace = this.sourceBlock_.workspace;
+    console.log(this.sourceBlock_)
     if (text == Blockly.Msg.RENAME_VARIABLE) {
         var oldVar = this.getText();
         text = promptName(Blockly.Msg.RENAME_VARIABLE_TITLE.replace('%1', oldVar),
@@ -172,24 +210,19 @@ Blockly.FieldVariable.dropdownChange = function(text) {
         if (text) {
             Blockly.Variables.renameVariable(oldVar, text, workspace);
         }
-/*
-        var plugList = $( ".ajs" ).data('fr.ina.amalia.player').player.pluginManager.plugins;        
-        var plug = findInspectorWidgetPlugin(plugList);
-        console.log('amalia from blockly',plug);
-
-        plug.openAddShape(this,drawingCallback);
-        */
-
-        //window.prompt('promptText', 'defaultText');
         return null;
-    } else if (text == Blockly.Msg.NEW_VARIABLE) {
+    } else if (text == Blockly.Msg.NEW_VARIABLE || (Blockly.Msg.REDEFINE_TEMPLATE && this.sourceBlock_.type === 'template_set')) {
+        var msg = this.getText();
+        if (text == Blockly.Msg.NEW_VARIABLE){
+        
         var newtext = promptName(Blockly.Msg.NEW_VARIABLE_TITLE, '');
         // Since variables are case-insensitive, ensure that if the new variable
         // matches with an existing variable, the new case prevails throughout.
-        var msg = null;
+        
         if (newtext) {
             Blockly.Variables.renameVariable('', newtext, workspace);
             msg = newtext;
+        }
         }
         
         var plugList = $( ".ajs" ).data('fr.ina.amalia.player').player.pluginManager.plugins;        
@@ -197,8 +230,7 @@ Blockly.FieldVariable.dropdownChange = function(text) {
         plug.openAddShape(this,drawingCallback);
         
         return msg;
-    }
-    window.prompt('Test',text);
+    }    
     return undefined;
 };
 
