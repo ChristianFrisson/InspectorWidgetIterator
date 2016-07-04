@@ -194,7 +194,6 @@ Blockly.FieldVariable.dropdownChange = function(text) {
         
         var plugList = $( ".ajs" ).data('fr.ina.amalia.player').player.pluginManager.plugins;        
         var plug = findInspectorWidgetPlugin(plugList);
-
         plug.openAddShape(this,drawingCallback);
         
         return msg;
@@ -593,7 +592,7 @@ Blockly.Blocks['extract_test'] = {
             };
             return TOOLTIPS[op];
         });
-        this.setHelpUrl('https://github.com/ChristianFrisson/InspectorWidget');
+        this.setHelpUrl('https://github.com/InspectorWidget/InspectorWidget');
         this.setColour(Blockly.Blocks.loops.HUE);
         if(EXTRACT_TESTS.length > 0){
             this.updateShape_(EXTRACT_TESTS[0][1]);
@@ -774,7 +773,7 @@ Blockly.Blocks['detect_alphanum'] = {
             };
             return TOOLTIPS[op];
         });
-        this.setHelpUrl('https://github.com/ChristianFrisson/InspectorWidget');
+        this.setHelpUrl('https://github.com/InspectorWidget/InspectorWidget');
         //this.setColour(Blockly.Blocks.loops.HUE);
         if(DETECT_TYPES.length > 0){
             this.updateShape_(DETECT_TYPES[0][1]);
