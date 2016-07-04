@@ -12,7 +12,7 @@
 	"licenseText": "/**\n * Copyright (c) 2015 Christian Frisson\n * This file is part of InspectorWidgetIterator\n\n * InspectorWidgetIterator is free software: you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\n * Redistributions of source code, javascript and css minified versions\n * must retain the above copyright notice, this list of conditions and the following disclaimer.\n\n * Neither the name of the copyright holder nor the names of its\n * contributors may be used to endorse or promote products derived from\n * this software without specific prior written permission.\n\n * You should have received a copy of the GNU General Public License\n * along with InspectorWidgetIterator. If not, see <http://www.gnu.org/licenses/>\n\n *\n * InspectorWidgetIterator is distributed in the hope that it will be useful,\n * but WITHOUT ANY WARRANTY; without even the implied warranty of\n * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n * GNU General Public License for more details.\n */\n\n",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/InspectorWidget/InspectorWidgetIterator.git"
+		"url": "https://github.com/InspectorWidget/InspectorWidgetIterator.git"
 	},
 	"devDependencies": {
 		"grunt": "^0.4.5",
@@ -30,15 +30,25 @@
 		"grunt-git-deploy": "~0.1.1"
 	},
 	"dependencies": {
-		"InspectorWidgetProcessor": "https://github.com/InspectorWidget/InspectorWidgetProcessor.git"
+		"InspectorWidgetProcessor": "https://github.com/InspectorWidget/InspectorWidgetProcessor.git",
+        "express": "4.13.4",
+        "socket.io": "1.4.5",
+        "glob": "7.0.3"
 	},
 	"cmake-js": {
-		"runtime": "nw",
-		"runtimeVersion": "0.12.3"
-	},
+        "runtime": "node",
+        "runtimeVersion": "6.2.2"
+    },
+	"cmake-js-inactive": {
+        "runtime": "nw",
+        "runtimeVersion": "0.12.3"
+    },
 	"main": "index.html",
 	"window": {
 		"frame": true,
-		"toolbar": false
-	}
+		"toolbar": true
+	},
+    "scripts": {
+        "server": "server.js"
+    }
 }

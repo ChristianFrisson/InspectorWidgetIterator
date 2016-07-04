@@ -23,7 +23,7 @@ coverage
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
 
-# Dependency directory
+# node dependency directory
 node_modules
 
 # Optional npm cache directory
@@ -31,3 +31,9 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+
+# OSX files
+.DS_Store
+
+# bower components directory
+bower_components

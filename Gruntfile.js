@@ -33,8 +33,8 @@ module.exports = function (grunt) {
 	    var child = grunt.util.spawn({
 	        grunt: true,
 	        args: ['clean:build',
-        			'jshint',
-        			'qunit:build',
+        			/*'jshint',
+        			'qunit:build',*/
         			'uglify:build',
 					'less:build',
 					'copy:build'

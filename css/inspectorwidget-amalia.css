@@ -1,0 +1,58 @@
+.ajs-plugin.plugin-timeline
+{
+	height:500px;
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .toolsbar
+{
+	padding-top: 0px;/*10*/
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .module-timeaxis
+{
+	height:28px;/*100*/
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .module-timeaxis .line
+{
+	height:0px;/*20*/
+	border-bottom-width: 0px;
+}
+
+.ajs-plugin.plugin-timeline .timeline-progress-container
+{
+	height:20px;/*102*/	
+}
+
+.ajs-plugin.plugin-timeline .components .component.segments-component.md .module-segments
+{
+	height:24px;
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .toolsbar button.ajs-icon
+{
+	height: 20px;
+	width: 20px;	
+	line-height: 24px;/*36*/
+	font-size: 15px;/*20*/
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .toolsbar
+{
+	height:20px;/*40*/	
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .module-timeaxis .time-grid
+{
+	height:5px;/*10*/	
+}
+
+.ajs-plugin.plugin-timeline .timeaxis .toolsbar .ajs-row 
+{
+	line-height:10px;/*21*/	
+}
+
+.ajs-plugin.plugin-timeline .components .segments-component .module-segments .line
+{
+	background-color: #6C6C6C;
+}
