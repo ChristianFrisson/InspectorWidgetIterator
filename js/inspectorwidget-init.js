@@ -440,7 +440,7 @@ resizePlayerHeight = function(height){
     var inspectorWidgetPlugins = $(".ajs-plugin.plugin-inspectorwidget");
     inspectorWidgetPlugins = inspectorWidgetPlugins.add($(".ajs-plugin.plugin-overlay"));
     inspectorWidgetPlugins.each(function(i,plugin){
-        plugin.style.top = $('#recording').height() + 'px';
+        plugin.style.top = 0/*$('#recording').height()*/ + 'px';
         plugin.style.height = $('.player').height() + 'px';
     })
     $('#blocklyControlsDiv').height(barsHeight);

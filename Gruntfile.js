@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         			/*'jshint',
         			'qunit:build',*/
         			'uglify:build',
-					'less:build',
+					'sass:dist',
 					'copy:build'
 					],
 	        opts: {
