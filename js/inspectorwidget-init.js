@@ -612,6 +612,7 @@ function runCode() {
                     , "tcin": currentTS
                     , "tcout": durationTS
                     , "tclevel": 1.0
+                    , "color": '#00ccff'
                 });
                 }
                 data = parser.processParserData(data);
