@@ -1,225 +1,193 @@
 var socket = io();
-
 var timer;
-
-socket.on('result', function(data){
-    console.log('Result: ',data)
-    alert('Result: '+data);
+socket.on('result', function (data) {
+    console.log('Result: ', data)
+    alert('Result: ' + data);
 });
-
-socket.on('error', function(msg){
-    console.log('Error: ',msg)
-    alert('Error: '+msg);
+socket.on('error', function (msg) {
+    console.log('Error: ', msg)
+    alert('Error: ' + msg);
 });
-
 var segmentsSuffix = '-segments';
 var overlaysSuffix = '-overlays';
-
 // in:ptr <span style="color:#7b3294">Hook Events from Pointer</span> -- 
 // cv:tm <span style="color:#c2a5cf">Computer Vision Template Matching</span> -- 
 // cv:txt <span style="color:#a6dba0">Computer Vision Text Recognition</span> -- 
 // in:key <span style="color:#008837">Hook Events from Keyboard</span> --
 // nested <span style="color:#008CBA">Combined Variables</span>
-
-function idsReceived (err, result) {
+function idsReceived(err, result) {
     if (err) {
-        console.log('ids Error',err);
+        console.log('ids Error', err);
         //io.emit('error', err);
         return;
     }
-    else{
+    else {
         var recordings = document.getElementById('recordings');
-        result.forEach(function(id){
-            var option = document.createElement('option');
-            option.value=id;
-            option.text=id;
-            recordings.appendChild(option);
-        })
-        //io.emit('result', result);
+        result.forEach(function (id) {
+                var option = document.createElement('option');
+                option.value = id;
+                option.text = id;
+                recordings.appendChild(option);
+            })
+            //io.emit('result', result);
         return;
     }
 }
-socket.emit('ids',idsReceived);
-
-inspectorWidgetAnnotationPath = function(recordingId,recordingPath,annotation,type){
+socket.emit('ids', idsReceived);
+inspectorWidgetAnnotationPath = function (recordingId, recordingPath, annotation, type) {
     annotationSuffix = '';
-    if(type === 'overlay'){
+    if (type === 'overlay') {
         annotationSuffix = overlaysSuffix;
     }
-    if(type === 'segment'){
+    if (type === 'segment') {
         annotationSuffix = segmentsSuffix;
     }
     return recordingPath + '/' + recordingId + '/json/' + recordingId + '-' + annotation.name + annotationSuffix + '.json';
 }
-
-inspectorWidgetVideoPath = function(recordingId,recordingPath){
+inspectorWidgetVideoPath = function (recordingId, recordingPath) {
     return recordingPath + '/' + recordingId + '/mp4/' + recordingId + '.mp4';
 }
-
-trackColor = function(annotation){
-    if(annotation.type === 'in:ptr'){
+trackColor = function (annotation) {
+    if (annotation.type === 'in:ptr') {
         return '#7b3294';
     }
-    else if(annotation.type === 'cv:tm'){
+    else if (annotation.type === 'cv:tm') {
         return '#c2a5cf';
     }
-    else if(annotation.type === 'cv:txt'){
+    else if (annotation.type === 'cv:txt') {
         return '#a6dba0';
     }
-    else if(annotation.type === 'in:key'){
+    else if (annotation.type === 'in:key') {
         return '#008837';
     }
-    else if(annotation.type === 'nested'){
+    else if (annotation.type === 'ax') {
         return '#008CBA';
     }
-    else if(annotation.type === 'progress'){
+    else if (annotation.type === 'progress') {
         return 'rgb(242, 80, 80)';
     }
-    else{
+    else {
         return '#FFFFFF';
     }
 }
-
-inspectorWidgetListDataServices = function (recordingId,recordingPath,annotations){
-    var dummyDataService = [ recordingPath + '/Dummy.json' ];
+inspectorWidgetListDataServices = function (recordingId, recordingPath, annotations) {
+    var dummyDataService = [recordingPath + '/Dummy.json'];
     var dataServices = [];
-
-    if(!annotations || annotations.length === 0){
+    if (!annotations || annotations.length === 0) {
         //console.log('null annotations')
         annotations = [];
         dataServices = dummyDataService;
         return dataServices;
     }
-
-    annotations.forEach(function(d,i){
-        if(d.overlay){
+    annotations.forEach(function (d, i) {
+        if (d.overlay) {
             dataServices = dataServices.concat({
-                protocol : "http",
-                url : inspectorWidgetAnnotationPath(recordingId,recordingPath,d,'overlay'),
-                // format : 'json',
-                parameters : {
-                    editingMode : true,
-                    mainLevel : true
+                protocol: "http"
+                , url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'), // format : 'json',
+                parameters: {
+                    editingMode: true
+                    , mainLevel: true
                 }
-            }
-                                              );
+            });
         }
-        if(d.segment){
-            dataServices = dataServices.concat(
-                inspectorWidgetAnnotationPath(recordingId,recordingPath,d,'segment')
-            );
+        if (d.segment) {
+            dataServices = dataServices.concat(inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'segment'));
         }
     });
     return dataServices;
-
 };
-
-inspectorWidgetListDataServiced = function (recordingId,recordingPath,annotations){
-    var dummyDataService = [ recordingPath + '/Dummy.json' ];
+inspectorWidgetListDataServiced = function (recordingId, recordingPath, annotations) {
+    var dummyDataService = [recordingPath + '/Dummy.json'];
     var dataServices = [];
-
-    if(!annotations || annotations.length === 0){
+    if (!annotations || annotations.length === 0) {
         annotations = [];
         dataServices = dummyDataService;
         return dataServices;
     }
-
-    annotations.forEach(function(d,i){
-        if(d.overlay){
+    annotations.forEach(function (d, i) {
+        if (d.overlay) {
             dataServices = dataServices.concat({
-                protocol : "http",
-                url : inspectorWidgetAnnotationPath(recordingId,recordingPath,d,'overlay'),
-                // format : 'json',
-                parameters : {
-                    editingMode : true,
-                    mainLevel : true
+                protocol: "http"
+                , url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'), // format : 'json',
+                parameters: {
+                    editingMode: true
+                    , mainLevel: true
                 }
-            }
-                                              );
+            });
         }
-        if(d.segment){
+        if (d.segment) {
             dataServices = dataServices.concat({
-                protocol : "http",
-                url : inspectorWidgetAnnotationPath(recordingId,recordingPath,d,'segment'),
-                // format : 'json',
-                parameters : {
-                    editingMode : true,
-                    mainLevel : true
+                protocol: "http"
+                , url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'segment'), // format : 'json',
+                parameters: {
+                    editingMode: true
+                    , mainLevel: true
                 }
-            }
-                                              );
+            });
         }
     });
     return dataServices;
-
 };
-
-inspectorWidgetListLines = function (annotations){
+inspectorWidgetListLines = function (annotations) {
     var listOfLines = [];
-
-    if(!annotations || annotations.length === 0){
+    if (!annotations || annotations.length === 0) {
         annotations = [];
         return listOfLines;
     }
-
-    annotations.forEach(function(d,i){
-        if(d.segment){
+    annotations.forEach(function (d, i) {
+        if (d.segment) {
             listOfLines = listOfLines.concat({
-                title : d.name,
-                type : 'segment',
-                metadataId : d.name + '-segments',
-                color : trackColor(d),
-                pointNav : true
+                title: d.name
+                , type: 'segment'
+                , metadataId: d.name + '-segments'
+                , color: trackColor(d)
+            })
+        }
+        else if (d.event) {
+            listOfLines = listOfLines.concat({
+                title: d.name
+                , type: 'cuepoint'
+                , metadataId: d.name + '-events'
+                , color: trackColor(d)
+                , pointNav: true
             })
         }
     });
     return listOfLines;
-
 };
-
-inspectorWidgetListSegments = function (annotations){
+inspectorWidgetListSegments = function (annotations) {
     var listOfSegments = [];
-
-    if(!annotations || annotations.length === 0){
+    if (!annotations || annotations.length === 0) {
         annotations = [];
         return listOfSegments;
     }
-
-    annotations.forEach(function(d,i){
-        if(d.segment){
-            listOfSegments = listOfSegments.concat(
-                d.name + '-segments'
-            )
+    annotations.forEach(function (d, i) {
+        if (d.segment) {
+            listOfSegments = listOfSegments.concat(d.name + '-segments')
         }
     });
     return listOfSegments;
-
 };
-
-inspectorWidgetInit = function (recordingId,recordingPath,annotations) {
-
-    if(!annotations || annotations.length === 0){
+inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
+    if (!annotations || annotations.length === 0) {
         annotations = [];
         //dataServices = dummyDataService;
     }
-
     /*var dataServices = inspectorWidgetListDataServices(recordingId,recordingPath,annotations);
     var listOfLines = inspectorWidgetListLines(annotations);*/
-    var dataServices = inspectorWidgetListDataServices(recordingId,recordingPath,[]);
+    var dataServices = inspectorWidgetListDataServices(recordingId, recordingPath, []);
     var listOfLines = [];
-
-    var autoplay = false;    
+    var autoplay = false;
     var settings = {
-        autoplay : false,
-        debug: false,
-        src : inspectorWidgetVideoPath(recordingId,recordingPath),
-        //controlBarClassName : "fr.ina.amalia.player.plugins.InspectorWidgetControlBarPlugin",
-        controlBar : {
-            sticky : true
-        },
-        plugins : {
-            dataServices : dataServices,
-            list : [
+        autoplay: false
+        , debug: false
+        , src: inspectorWidgetVideoPath(recordingId, recordingPath), //controlBarClassName : "fr.ina.amalia.player.plugins.InspectorWidgetControlBarPlugin",
+        controlBar: {
+            sticky: true
+        }
+        , plugins: {
+            dataServices: dataServices
+            , list: [
                 /*{
                     'className' : 'fr.ina.amalia.player.plugins.OverlayPlugin',
                     'metadataId' : 'ColorDropper-overlays',
@@ -234,305 +202,356 @@ inspectorWidgetInit = function (recordingId,recordingPath,annotations) {
                     }
                 },*/
                 {
-                    'className' : 'fr.ina.amalia.player.plugins.InspectorWidgetPlugin',
-                    'metadataId' : 'InspectorWidget',
-                    'debug' : false,
-                    'parameters' : {
-                        editable: true,
-                        style : {
-                            'fill' : '#7b3294',
-                            'strokeWidth' : 4,
-                            'stroke' : '#7b3294',
-                            'fillOpacity' : 0,
-                            'strokeDasharray' : '-'
+                    'className': 'fr.ina.amalia.player.plugins.InspectorWidgetPlugin'
+                    , 'metadataId': 'InspectorWidget'
+                    , 'debug': false
+                    , 'parameters': {
+                        editable: true
+                        , style: {
+                            'fill': '#7b3294'
+                            , 'strokeWidth': 4
+                            , 'stroke': '#7b3294'
+                            , 'fillOpacity': 0
+                            , 'strokeDasharray': '-'
                         }
                     }
-                },
-                {
-                    'className' : 'fr.ina.amalia.player.plugins.TimelinePlugin',
-                    'container' : '#timeline',
-                    'parameters' : {
-                        editingMode : true,
-                        timeaxe: true,  
-                        timecursor: true,
-                        timeaxeExpandable: true,
-                        displayLines : listOfLines.length,
-                        resizable : false,
-                        lineDisplayMode : fr.ina.amalia.player.plugins.PluginBaseMultiBlocks.METADATA_DISPLAY_TYPE.STATIC,//STATIC//STATIC_DYNAMIC//DYNAMIC
-                        listOfLines : listOfLines
+                }
+                , {
+                    'className': 'fr.ina.amalia.player.plugins.TimelinePlugin'
+                    , 'container': '#timeline'
+                    , 'parameters': {
+                        editingMode: true
+                        , timeaxe: true
+                        , timecursor: true
+                        , timeaxeExpandable: true
+                        , displayLines: listOfLines.length
+                        , resizable: false
+                        , lineDisplayMode: fr.ina.amalia.player.plugins.PluginBaseMultiBlocks.METADATA_DISPLAY_TYPE.STATIC, //STATIC//STATIC_DYNAMIC//DYNAMIC
+                        listOfLines: listOfLines
                     }
                 }
             ]
         }
-
     };
-
-    var f = $( "#defaultPlayer" ).mediaPlayer( settings );
+    var f = $("#defaultPlayer").mediaPlayer(settings);
     resizePlayerHeight($('#player').height());
-
     f.on(fr.ina.amalia.player.PlayerEventType.STARTED, {
         self: f
-    },
-         function(){
-        inspectorWidgetAddAnnotations(recordingId,recordingPath,annotations)
-        resizePlayerHeight($(document).height()-$('#timeline').height());
+    }, function () {
+        inspectorWidgetAddAnnotations(recordingId, recordingPath, annotations)
+        resizePlayerHeight($('#window').height() - $('#timeline').height());
+
+        function axAvailable(err, files) {
+            if (err) {
+                alert('No accessibility information available')
+                return;
+            }
+            else {
+                var loadAx = confirm('Accessibility information available. Do you want to load it?');
+                if (loadAx == true) {
+                    function runDone(id, err, result) {
+                        if (!err) {
+                            var accessibilityAnnotations = ['focus_application', 'focus_window', 'pointed_widget'];
+                            accessibilityAnnotations.forEach(function (accessibilityAnnotation) {
+                                function updateAccessibilityAnnotation(accessibilityAnnotation) {
+                                    function statusDone(recordingId, err, result, phase, progress) {
+                                        if (err !== null) {
+                                            var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
+                                            if (!timelinePlugin) {
+                                                console.log('Could not access amalia.js timeline plugin');
+                                                return;
+                                            }
+                                            var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
+                                            if (!player) {
+                                                console.log('Could not access amalia.js player');
+                                                return;
+                                            }
+                                            var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
+                                            result = JSON.parse(result);
+                                            var data;
+                                            if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations && 'id' in result ) {
+                                                data = result;
+                                            }
+
+                                            var metadataId = data.id;
+                                            var metatadaName = metadataId.split('-')[0];
+                                            
+                                            if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
+                                                var d = {
+                                                    name: metatadaName
+                                                    , segment: false
+                                                    , overlay: false
+                                                    , event: true
+                                                    , type: 'ax'
+                                                }
+                                                var listOfLines = inspectorWidgetListLines([d]);
+                                                timelinePlugin.createComponentsWithList(listOfLines)
+                                                timelinePlugin.displayLinesNb += 1;
+                                                timelinePlugin.settings.displayLines += 1;
+                                            }
+                                            data = parser.processParserData(data);
+                                            var viewControl = data.viewControl;
+                                            var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
+                                            player.player.updateBlockMetadata(data.id, {
+                                                id: data.id
+                                                , label: data.label
+                                                , type: data.hasOwnProperty('type') ? data.type : 'default'
+                                                , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
+                                                , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
+                                                , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                                            }, null);
+                                            player.player.replaceAllMetadataById(data.id, data.list);
+                                            timelinePlugin.updateComponentsLineHeight();
+                                            resizePlayerHeight($('#window').height() - $('#timeline').height());
+                                        }
+                                    }
+                                    socket.emit('accessibilityAnnotationStatus', recordingId, accessibilityAnnotation, statusDone);
+                                }
+                                updateAccessibilityAnnotation(accessibilityAnnotation);
+                            });
+                        }
+                    }
+                    socket.emit('run', recordingId, 'detectTime(Time)', runDone);
+                }
+            }
+        }
+        socket.emit('isAXAvailable', recordingId, axAvailable);
     });
-
 };
-
 inspectorWidgetFindPlugin = function (pluginClass) {
-    var player = $( ".ajs" ).data('fr.ina.amalia.player');//.player.pluginManager.plugins;
-    if(!player){
+    var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
+    if (!player) {
         console.log('Could not access amalia.js player');
         return null;
     }
-
     var pluginList = player.player.pluginManager.plugins;
-    if(!pluginList){
+    if (!pluginList) {
         console.log('Could not access amalia.js plugin list');
         return null;
     }
-
-    for(var i=0; i<pluginList.length; i++) {
-        if (pluginList[i].namespace == "fr.ina.amalia.player.plugins."+ pluginClass) return pluginList[i];
+    for (var i = 0; i < pluginList.length; i++) {
+        if (pluginList[i].namespace == "fr.ina.amalia.player.plugins." + pluginClass) return pluginList[i];
     }
     return null;
 };
-
-
-inspectorWidgetRemoveAnnotations = function (recordingId,recordingPath,annotations) {
-
+inspectorWidgetRemoveAnnotations = function (recordingId, recordingPath, annotations) {
     var timelinePlugin = inspectorWidgetFindlinePlugin('TimelinePlugin');
-    if(!timelinePlugin){
+    if (!timelinePlugin) {
         console.log('Could not access amalia.js timeline plugin');
         return;
     }
-
-    var fields = [timelinePlugin.listOfComponents,
-                  timelinePlugin.settingsListOfComponents,
-                  timelinePlugin.settings.listOfLines,
-                  timelinePlugin.managedMetadataIds,
-                  timelinePlugin.notManagedMetadataIds
+    var fields = [timelinePlugin.listOfComponents
+                  , timelinePlugin.settingsListOfComponents
+                  , timelinePlugin.settings.listOfLines
+                  , timelinePlugin.managedMetadataIds
+                  , timelinePlugin.notManagedMetadataIds
                  ];
-    function removeMetadataId(fields,metadataId){
-        fields.forEach(function(field){
+
+    function removeMetadataId(fields, metadataId) {
+        fields.forEach(function (field) {
             //console.log('field',field);
-            field.reverse().forEach(function(d,i){
+            field.reverse().forEach(function (d, i) {
                 //console.log('field',d);
-                if(typeof(d) === 'string' && d === metadataId){
-                    field.splice(i,1)
+                if (typeof (d) === 'string' && d === metadataId) {
+                    field.splice(i, 1)
                 }
-                else if(typeof(d) === 'object' && 'metadataId' in d && d.metadataId === metadataId){
-                    field.splice(i,1)
+                else if (typeof (d) === 'object' && 'metadataId' in d && d.metadataId === metadataId) {
+                    field.splice(i, 1)
                 }
             })
         })
     }
-
-    annotations.forEach(function(annotation) {
+    annotations.forEach(function (annotation) {
         var deleteMetadataId = annotation.name + '-segments';
-
         var managedMetadataIds = timelinePlugin.managedMetadataIds.length;
-        if(timelinePlugin.isManagedMetadataId(deleteMetadataId) !== -1){
-            timelinePlugin.deleteComponentsWithMetadataId( deleteMetadataId );
-            var _managedMetadataIds = timelinePlugin.managedMetadataIds.length;            
-            if( _managedMetadataIds - managedMetadataIds === -1 ){
+        if (timelinePlugin.isManagedMetadataId(deleteMetadataId) !== -1) {
+            timelinePlugin.deleteComponentsWithMetadataId(deleteMetadataId);
+            var _managedMetadataIds = timelinePlugin.managedMetadataIds.length;
+            if (_managedMetadataIds - managedMetadataIds === -1) {
                 timelinePlugin.displayLinesNb -= 1;
                 timelinePlugin.settings.displayLines -= 1;
-                removeMetadataId(fields,deleteMetadataId);
+                removeMetadataId(fields, deleteMetadataId);
             }
         }
     });
     timelinePlugin.updateComponentsLineHeight();
 };
-
-inspectorWidgetAddAnnotations = function (recordingId,recordingPath,annotations) {
-
-    var player = $( ".ajs" ).data('fr.ina.amalia.player');//.player.pluginManager.plugins;
-    if(!player){
+inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotations) {
+    var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
+    if (!player) {
         console.log('Could not access amalia.js player');
         return;
     }
-
     var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
-    if(!timelinePlugin){
+    if (!timelinePlugin) {
         console.log('Could not access amalia.js timeline plugin');
         return;
     }
-
-    var dataServices = inspectorWidgetListDataServices(recordingId,recordingPath,annotations);
-
-    annotations.forEach(function(d){
-        var metadataId = d.name  + '-segments';
-        if( timelinePlugin.isManagedMetadataId (metadataId) === false){
-
+    var dataServices = inspectorWidgetListDataServices(recordingId, recordingPath, annotations);
+    annotations.forEach(function (d) {
+        var metadataId = d.name + '-segments';
+        if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
             var listOfLines = inspectorWidgetListLines([d]);
             timelinePlugin.createComponentsWithList(listOfLines)
-
             timelinePlugin.displayLinesNb += 1;
             timelinePlugin.settings.displayLines += 1;
         }
     })
-
     var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
 
-    function loadData(url){
+    function loadData(url) {
         var self = this;
         $.ajax({
-            type: 'GET',
-            url: url,
-            timeout: 120000,
-            data: {},
-            dataType: 'json',
-            success: function (data, textStatus) {
+            type: 'GET'
+            , url: url
+            , timeout: 120000
+            , data: {}
+            , dataType: 'json'
+            , success: function (data, textStatus) {
                 //console.log('success')
                 data = parser.processParserData(data);
                 var viewControl = data.viewControl;
                 var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
                 player.player.updateBlockMetadata(data.id, {
-                    id: data.id,
-                    label: data.label,
-                    type: data.hasOwnProperty('type') ? data.type : 'default',
-                    author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : '',
-                    color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf',
-                    shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
-                },null);
+                    id: data.id
+                    , label: data.label
+                    , type: data.hasOwnProperty('type') ? data.type : 'default'
+                    , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
+                    , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
+                    , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                }, null);
                 //console.log(data.list)
                 player.player.replaceAllMetadataById(data.id, data.list);
-                //resizePlayerHeight($(document).height()-$('#timeline').height());
-            },
-            error: function (data, textStatus) {
-                console.log(url,'error',data,textStatus)
+                //resizePlayerHeight($('#window').height() - $('#timeline').height());
+            }
+            , error: function (data, textStatus) {
+                console.log(url, 'error', data, textStatus)
             }
         });
     }
-
     // pluginManager.loadData(dataServices);
-    annotations.forEach(function(d,i){
-        if(d.segment){
-            loadData( inspectorWidgetAnnotationPath(recordingId,recordingPath,d,'segment'))
+    annotations.forEach(function (d, i) {
+        if (d.segment) {
+            loadData(inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'segment'))
         }
-        if(d.overlay){
-            loadData( inspectorWidgetAnnotationPath(recordingId,recordingPath,d,'overlay'))
+        if (d.overlay) {
+            loadData(inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'))
         }
     });
-
     timelinePlugin.updateComponentsLineHeight();
 };
-
-resizePlayerWidth = function(width){
-    $('#playercode').width($(document).width()); 
-    $('#code').width($(document).width()-width); 
+resizePlayerWidth = function (width) {
+    $('#playercode').width($(document).width());
+    $('#code').width($(document).width() - width);
     var workspace = Blockly.getMainWorkspace();
-    Blockly.svgResize(workspace); 
+    Blockly.svgResize(workspace);
 }
-resizePlayerHeight = function(height){
+resizePlayerHeight = function (height) {
     //console.log(event.clientX,event.clientY,y);
     $('#playercode').height(height);
     $('#player').height(height);
-    $('#defaultPlayer').height(height-$('#recording').height());
+    $('#defaultPlayer').height(height - $('#recording').height());
     var controlBars = $(".plugin-custom-controlbar");
     var barsHeight = 0;
-    if (controlBars.length > 0){
-        barsHeight += parseInt( controlBars[0].clientHeight , 10);
+    if (controlBars.length > 0) {
+        barsHeight += parseInt(controlBars[0].clientHeight, 10);
     }
-    $('.player').height(height-$('#recording').height()-barsHeight);
+    $('.player').height(height - $('#recording').height() - barsHeight);
     var inspectorWidgetPlugins = $(".ajs-plugin.plugin-inspectorwidget");
     inspectorWidgetPlugins = inspectorWidgetPlugins.add($(".ajs-plugin.plugin-overlay"));
-    inspectorWidgetPlugins.each(function(i,plugin){
-        plugin.style.top = 0/*$('#recording').height()*/ + 'px';
+    inspectorWidgetPlugins.each(function (i, plugin) {
+        plugin.style.top = 0 /*$('#recording').height()*/ + 'px';
         plugin.style.height = $('.player').height() + 'px';
     })
     $('#blocklyControlsDiv').height(barsHeight);
     $('#code').height(height);
-    $('#blocklyDiv').height(height-$('#blocklyControlsDiv').height());
+    $('#blocklyDiv').height(height - $('#blocklyControlsDiv').height());
     var workspace = Blockly.getMainWorkspace();
-    Blockly.svgResize(workspace); 
+    Blockly.svgResize(workspace);
 }
 
-function createButton(container,id,callback,iconId){
-    if(document.getElementById(id) === null){
+function createButton(container, id, callback, iconId) {
+    if (document.getElementById(id) === null) {
         var button = document.createElement('a');
-        button.setAttribute('id',id)
-        button.setAttribute('title',id)
-        button.setAttribute('onclick',callback)
+        button.setAttribute('id', id)
+        button.setAttribute('title', id)
+        button.setAttribute('onclick', callback)
         var icon = document.createElement('i');
-        icon.setAttribute('class','fa ' + iconId);
+        icon.setAttribute('class', 'fa ' + iconId);
         button.appendChild(icon);
         var span = document.createElement('span');
         span.appendChild(button)
         container.appendChild(span);
-    }    
+    }
 }
 
-function changeRecording(id){
-    if(id === ''){
+function changeRecording(recordingId) {
+    if (recordingId === '') {
         return;
     }
 
     function annotationsReceived(err, files) {
         if (err) {
-            console.log('annotations Error',err);
+            console.log('annotations Error', err);
             return;
         }
-        else{
+        else {
             $("#player").resizable({
-                handles: 'e, w',
-                ghost: false,
-            });
-            $('#player').resize(function(event,ui){
+                handles: 'e, w'
+                , ghost: false
+            , });
+            $('#player').resize(function (event, ui) {
                 var x = event.clientX;
-                resizePlayerWidth(x); 
+                resizePlayerWidth(x);
             })
             $("#playercode").resizable({
-                handles: 's',
-                ghost: false,
-            }); 
-            $('#playercode').resize(function(event,ui){
+                handles: 's'
+                , ghost: false
+            , });
+            $('#playercode').resize(function (event, ui) {
                 var y = ui.size.height;
                 resizePlayerHeight(y);
             })
             var blocklyDiv = document.getElementById('blocklyDiv');
-            if(blocklyDiv !== null && blocklyDiv.childElementCount === 0){
-                var workspace = Blockly.inject(blocklyDiv,
-                                               {media: 'bower_components/blockly/media/',
-                                                toolbox: document.getElementById('toolbox')});
-                /* Enable this line to load a default annotation program */ Blockly.Xml.domToWorkspace(workspace,document.getElementById('startBlocks'));
+            if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
+                var workspace = Blockly.inject(blocklyDiv, {
+                    media: 'bower_components/blockly/media/'
+                    , toolbox: document.getElementById('toolbox')
+                });
+                /* Enable this line to load a default annotation program */
+                Blockly.Xml.domToWorkspace(workspace, document.getElementById('startBlocks'));
             }
-
             var blocklyControls = document.getElementById('blocklyControlsDiv');
-
-            createButton(blocklyControls,'showCode','showCode()','fa-info-circle'); 
-            createButton(blocklyControls,'saveCode','saveCode()','fa-download');
-            document.getElementById('saveCode').setAttribute('download','InspectorWidget.xml');
-            createButton(blocklyControls,'runCode','runCode()','fa-play'); 
-            createButton(blocklyControls,'abort','abort()','fa-stop');
-            createButton(blocklyControls,'status','status()','fa-question-circle');
-
+            createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
+            createButton(blocklyControls, 'saveCode', 'saveCode()', 'fa-download');
+            document.getElementById('saveCode').setAttribute('download', 'InspectorWidget.xml');
+            createButton(blocklyControls, 'runCode', 'runCode()', 'fa-play');
+            createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
+            createButton(blocklyControls, 'status', 'status()', 'fa-question-circle');
             var annotations = [];
-            files.forEach(function(file){
+            files.forEach(function (file) {
                 var stem = file.split('/').pop().split('.').reverse().pop();
                 var hyphens = stem.split('-');
                 var type = hyphens.pop();
                 var label = hyphens.pop();
                 var annotation = {
-                    name: label,
-                    segment: true,
-                    overlay: true,
-                    type: 'cv:tm'
+                    name: label
+                    , segment: true
+                    , overlay: true
+                    , event: false
+                    , type: 'cv:tm'
                 }
                 annotations = annotations.concat(annotation);
-
             });
             var recordingPath = '/data/';
-            inspectorWidgetInit(id,recordingPath,annotations);
+            inspectorWidgetInit(recordingId, recordingPath, annotations);
         }
     }
-    socket.emit('annotations',id,annotationsReceived);
+    socket.emit('annotations', recordingId, annotationsReceived);
 }
 
 function showCode() {
-    var workspace = Blockly.getMainWorkspace(); 
+    var workspace = Blockly.getMainWorkspace();
     // Generate JavaScript code and display it.
     Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
     var code = Blockly.JavaScript.workspaceToCode(workspace);
@@ -540,27 +559,26 @@ function showCode() {
 }
 
 function status() {
-
     var recordings = document.getElementById('recordings');
     var recordingId = recordings.value;
-    function done (id,err,result,phase,progress) {
+
+    function done(id, err, result, phase, progress) {
         if (err) {
-            console.log('Error',err);
+            console.log('Error', err);
             //io.emit('error', err);
             return;
         }
-        else{
-            console.log('Result',result);
+        else {
+            console.log('Result', result);
             //io.emit('result', result);
             return;
         }
     }
-    if(socket.connected === false){
+    if (socket.connected === false) {
         alert('InspectorWidgetProcessor server disconnected.');
-        return; 
+        return;
     }
-    socket.emit('status',recordingId,done);
-
+    socket.emit('status', recordingId, done);
 }
 
 function runCode() {
@@ -606,14 +624,14 @@ function runCode() {
                         , "version": 1.0
                     };
                 }
-                if(progress<1){
-                data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
-                    "label": template
-                    , "tcin": currentTS
-                    , "tcout": durationTS
-                    , "tclevel": 1.0
-                    , "color": '#00ccff'
-                });
+                if (progress < 1) {
+                    data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
+                        "label": template
+                        , "tcin": currentTS
+                        , "tcout": durationTS
+                        , "tclevel": 1.0
+                        , "color": '#00ccff'
+                    });
                 }
                 data = parser.processParserData(data);
                 var viewControl = data.viewControl;
@@ -629,7 +647,7 @@ function runCode() {
                 player.player.replaceAllMetadataById(data.id, data.list);
             }
         }
-        socket.emit('annotationStatus', recordingId, template, statusDone);
+        socket.emit('templateAnnotationStatus', recordingId, template, statusDone);
     }
     if (socket.connected === false) {
         alert('InspectorWidgetProcessor server disconnected.');
@@ -671,6 +689,7 @@ function runCode() {
                     name: template
                     , segment: true
                     , overlay: false
+                    , event: false
                     , type: 'progress'
                 }
                 var listOfLines = inspectorWidgetListLines([d]);
@@ -682,7 +701,7 @@ function runCode() {
         }
     });
     timelinePlugin.updateComponentsLineHeight();
-    resizePlayerHeight($(document).height() - $('#timeline').height());
+    resizePlayerHeight($('#window').height() - $('#timeline').height());
 
     function runDone(id, err, result) {
         clearInterval(timer);
@@ -716,15 +735,12 @@ function saveCode() {
     var workspace = Blockly.getMainWorkspace();
     var xml = Blockly.Xml.workspaceToDom(workspace);
     var code = Blockly.Xml.domToText(xml);
-
     var serializer = new XMLSerializer();
     var source = serializer.serializeToString(xml);
-
     //Optional: prettify the XML with proper indentations
     source = vkbeautify.xml(source);
     //convert svg source to URI data scheme.
-    var url = "data:xml/xml;charset=utf-8,"+encodeURIComponent(source);
-
+    var url = "data:xml/xml;charset=utf-8," + encodeURIComponent(source);
     //set url value to a element's href attribute.
     document.getElementById("saveCode").href = url;
 }
@@ -735,5 +751,5 @@ function abort() {
     clearInterval(timer);
     $('#runCode')[0].disabled = false;
     $('#abort')[0].disabled = true;
-    socket.emit('abort',recordingId);
+    socket.emit('abort', recordingId);
 }

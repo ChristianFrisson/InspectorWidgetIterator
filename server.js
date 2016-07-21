@@ -100,8 +100,11 @@ io.on('connection', function(socket){
     socket.on('status', function(id,done){
         processor.status(id,done);
     });
-    socket.on('annotationStatus', function(id,template,done){
-        processor.annotationStatus(id,template,done);
+    socket.on('templateAnnotationStatus', function(id,template,done){
+        processor.templateAnnotationStatus(id,template,done);
+    });
+    socket.on('accessibilityAnnotationStatus', function(id,template,done){
+        processor.accessibilityAnnotationStatus(id,template,done);
     });
     socket.on('abort', function(id){
         processor.abort(id);
@@ -111,6 +114,17 @@ io.on('connection', function(socket){
     });
     socket.on('annotations',function(id,done){
         glob(id+"/json/*-segments.json", {cwd : datapath}, function (er, files) {
+            console.log(er,files)
+            if(files){
+                done('',files);
+            }
+            else{
+                done(er,'');
+            }
+        })
+    });
+    socket.on('isAXAvailable',function(id,done){
+        glob(id+"/xml/"+id+".xml", {cwd : datapath}, function (er, files) {
             console.log(er,files)
             if(files){
                 done('',files);
