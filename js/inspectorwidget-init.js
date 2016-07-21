@@ -269,13 +269,11 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                                             var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
                                             result = JSON.parse(result);
                                             var data;
-                                            if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations && 'id' in result ) {
+                                            if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations && 'id' in result) {
                                                 data = result;
                                             }
-
                                             var metadataId = data.id;
                                             var metatadaName = metadataId.split('-')[0];
-                                            
                                             if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
                                                 var d = {
                                                     name: metatadaName
@@ -510,8 +508,22 @@ function changeRecording(recordingId) {
             , });
             $('#playercode').resize(function (event, ui) {
                 var y = ui.size.height;
+                var windowHeight = $('#window').height();
+                // from timelinePlugin updateComponentsLineHeight()
+                var element = $('#timeline');
+                var headerAndFooterHeight = parseFloat(element.find('.timeaxis').height() + element.find('.module-nav-bar-container').height());
+                $( "#playercode" ).resizable( "option", "maxHeight", windowHeight-headerAndFooterHeight );
+                var maxHeight = $( ".selector" ).resizable( "option", "maxHeight" );
                 resizePlayerHeight(y);
+                element.find('.components').first().css('height', windowHeight-y-headerAndFooterHeight);
+                element.css("height", windowHeight-y);
             })
+            window.addEventListener('resize', function (event) {
+                var windowHeight = $('#window').height();
+                var timelineHeight = $("#timeline").height();
+                var playerHeight = $("#player").height();
+                resizePlayerHeight($('#window').height() - $("#timeline").height());
+            });
             var blocklyDiv = document.getElementById('blocklyDiv');
             if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
                 var workspace = Blockly.inject(blocklyDiv, {
