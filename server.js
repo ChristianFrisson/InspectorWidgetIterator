@@ -106,6 +106,9 @@ io.on('connection', function(socket){
     socket.on('accessibilityAnnotationStatus', function(id,template,done){
         processor.accessibilityAnnotationStatus(id,template,done);
     });
+    socket.on('accessibilityUnderMouse', function(id,time,x,y,done){
+        processor.accessibilityUnderMouse(id,time,x,y,done);
+    });
     socket.on('abort', function(id){
         processor.abort(id);
     });

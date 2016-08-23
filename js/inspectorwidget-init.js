@@ -234,7 +234,7 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
         }
     };
     var f = $("#defaultPlayer").mediaPlayer(settings);
-    resizePlayerHeight($('#player').height());
+    resizePlayerHeight($('#window').height() - $("#timeline").height());
     f.on(fr.ina.amalia.player.PlayerEventType.STARTED, {
         self: f
     }, function () {
@@ -247,70 +247,138 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 return;
             }
             else {
-                var loadAx = confirm('Accessibility information available. Do you want to load it?');
-                if (loadAx == true) {
-                    function runDone(id, err, result) {
-                        if (!err) {
-                            var accessibilityAnnotations = ['focus_application', 'focus_window', 'pointed_widget'];
-                            accessibilityAnnotations.forEach(function (accessibilityAnnotation) {
-                                function updateAccessibilityAnnotation(accessibilityAnnotation) {
-                                    function statusDone(recordingId, err, result, phase, progress) {
-                                        if (err !== null) {
-                                            var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
-                                            if (!timelinePlugin) {
-                                                console.log('Could not access amalia.js timeline plugin');
-                                                return;
-                                            }
-                                            var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
-                                            if (!player) {
-                                                console.log('Could not access amalia.js player');
-                                                return;
-                                            }
-                                            var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
-                                            result = JSON.parse(result);
-                                            var data;
-                                            if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations && 'id' in result) {
-                                                data = result;
-                                            }
-                                            var metadataId = data.id;
-                                            var metatadaName = metadataId.split('-')[0];
-                                            if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
-                                                var d = {
-                                                    name: metatadaName
-                                                    , segment: false
-                                                    , overlay: false
-                                                    , event: true
-                                                    , type: 'ax'
-                                                }
-                                                var listOfLines = inspectorWidgetListLines([d]);
-                                                timelinePlugin.createComponentsWithList(listOfLines)
-                                                timelinePlugin.displayLinesNb += 1;
-                                                timelinePlugin.settings.displayLines += 1;
-                                            }
-                                            data = parser.processParserData(data);
-                                            var viewControl = data.viewControl;
-                                            var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
-                                            player.player.updateBlockMetadata(data.id, {
-                                                id: data.id
-                                                , label: data.label
-                                                , type: data.hasOwnProperty('type') ? data.type : 'default'
-                                                , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
-                                                , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
-                                                , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
-                                            }, null);
-                                            player.player.replaceAllMetadataById(data.id, data.list);
-                                            timelinePlugin.updateComponentsLineHeight();
-                                            resizePlayerHeight($('#window').height() - $('#timeline').height());
-                                        }
-                                    }
-                                    socket.emit('accessibilityAnnotationStatus', recordingId, accessibilityAnnotation, statusDone);
-                                }
-                                updateAccessibilityAnnotation(accessibilityAnnotation);
-                            });
-                        }
-                    }
-                    socket.emit('run', recordingId, 'detectTime(Time)', runDone);
+                /// Accessibility on mouse hover
+                inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+                if (!inspectorWidgetPlugin) {
+                    console.log('Could not access amalia.js InspectorWidget plugin');
+                    return;
                 }
+
+                function onMouseMove(event) {
+                    var videoSize = event.data.self.getVideoSize();
+                    var player = event.data.self.mediaPlayer.getMediaPlayer();
+                    var l = (player.width() - videoSize.w) / 2;
+                    var t = (player.height() - videoSize.h) / 2;
+                    var w = videoSize.w;
+                    var h = videoSize.h;
+                    var rect = event.currentTarget.getBoundingClientRect();
+                    var x = event.clientX - rect.left;
+                    var y = event.clientY - rect.top;
+                    /// Handle accessibility on hover
+                    if (x - l > 0 && y - t > 0 && x - l < w && y - t < h && inspectorWidgetPlugin.doDraw === false) {
+                        var time = event.data.self.mediaPlayer.getCurrentTime();
+
+                        function accessibilityUnderMouseReceived(id, err, x, y, w, h) {
+                            x = parseFloat(x);
+                            y = parseFloat(y);
+                            w = parseFloat(w);
+                            h = parseFloat(h);
+                            inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+                            if (!inspectorWidgetPlugin) {
+                                console.log('Could not access amalia.js InspectorWidget plugin');
+                                return;
+                            }
+                            var videoSize = inspectorWidgetPlugin.getVideoSize();
+                            inspectorWidgetPlugin.drawingHandler.show();
+                            inspectorWidgetPlugin.drawingHandler.toFront();
+                            inspectorWidgetPlugin.drawingHandler.doDraw.startX = x * videoSize.w;
+                            inspectorWidgetPlugin.drawingHandler.doDraw.startY = y * videoSize.h;
+                            inspectorWidgetPlugin.drawingHandler.doDraw.endX = (x + w) * videoSize.w;
+                            inspectorWidgetPlugin.drawingHandler.doDraw.endY = (y + h) * videoSize.h;
+                            inspectorWidgetPlugin.drawingHandler.attr('width', w * videoSize.w);
+                            inspectorWidgetPlugin.drawingHandler.attr('height', h * videoSize.h);
+                            inspectorWidgetPlugin.drawingHandler.attr('x', inspectorWidgetPlugin.drawingHandler.doDraw.startX);
+                            inspectorWidgetPlugin.drawingHandler.attr('y', inspectorWidgetPlugin.drawingHandler.doDraw.startY);
+                            inspectorWidgetPlugin.drawingHandler.attr('fill', '#3cf');
+                            inspectorWidgetPlugin.drawingHandler.attr('fill-opacity', '0.3');
+                        }
+                        socket.emit('accessibilityUnderMouse', recordingId, time, (x - l) / w, (y - t) / h, accessibilityUnderMouseReceived);
+                    }
+                    /// Handle template annotation
+                    if (event.data.self.drawing === true) {
+                        var endX = Math.max(0, event.offsetX);
+                        var endY = Math.max(0, event.offsetY);
+                        var width = Math.max(0, endX - event.data.self.drawingHandler.doDraw.startX);
+                        var height = Math.max(0, endY - event.data.self.drawingHandler.doDraw.startY);
+                        event.data.self.drawingHandler.doDraw.endX = endX;
+                        event.data.self.drawingHandler.doDraw.endY = endY;
+                        event.data.self.drawingHandler.attr('width', width);
+                        event.data.self.drawingHandler.attr('height', height);
+                    }
+                };
+                inspectorWidgetPlugin.container.on('mousemove', {
+                    self: inspectorWidgetPlugin
+                }, onMouseMove);
+                inspectorWidgetPlugin.container.on('mouseleave', {
+                    self: inspectorWidgetPlugin
+                }, function (event) {
+                    event.data.self.drawingHandler.hide();
+                });
+                /// Try to load basic accessibility annotations
+                //var loadAx = confirm('Accessibility information available. Do you want to load it?');
+                //if (loadAx == true) {
+                function initRecordingDone(id, err, result) {
+                    if (!err) {
+                        var accessibilityAnnotations = ['focus_application', 'focus_window', 'pointed_widget'];
+                        accessibilityAnnotations.forEach(function (accessibilityAnnotation) {
+                            function updateAccessibilityAnnotation(accessibilityAnnotation) {
+                                function accessibilityAnnotationReceived(recordingId, err, result, phase, progress) {
+                                    if (err !== null) {
+                                        var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
+                                        if (!timelinePlugin) {
+                                            console.log('Could not access amalia.js timeline plugin');
+                                            return;
+                                        }
+                                        var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
+                                        if (!player) {
+                                            console.log('Could not access amalia.js player');
+                                            return;
+                                        }
+                                        var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
+                                        result = JSON.parse(result);
+                                        var data;
+                                        if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations && 'id' in result) {
+                                            data = result;
+                                        }
+                                        var metadataId = data.id;
+                                        var metatadaName = metadataId.split('-')[0];
+                                        if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
+                                            var d = {
+                                                name: metatadaName
+                                                , segment: false
+                                                , overlay: false
+                                                , event: true
+                                                , type: 'ax'
+                                            }
+                                            var listOfLines = inspectorWidgetListLines([d]);
+                                            timelinePlugin.createComponentsWithList(listOfLines)
+                                            timelinePlugin.displayLinesNb += 1;
+                                            timelinePlugin.settings.displayLines += 1;
+                                        }
+                                        data = parser.processParserData(data);
+                                        var viewControl = data.viewControl;
+                                        var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
+                                        player.player.updateBlockMetadata(data.id, {
+                                            id: data.id
+                                            , label: data.label
+                                            , type: data.hasOwnProperty('type') ? data.type : 'default'
+                                            , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
+                                            , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
+                                            , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                                        }, null);
+                                        player.player.replaceAllMetadataById(data.id, data.list);
+                                        timelinePlugin.updateComponentsLineHeight();
+                                        resizePlayerHeight($('#window').height() - $('#timeline').height());
+                                    }
+                                }
+                                socket.emit('accessibilityAnnotationStatus', recordingId, accessibilityAnnotation, accessibilityAnnotationReceived);
+                            }
+                            updateAccessibilityAnnotation(accessibilityAnnotation);
+                        });
+                    }
+                }
+                socket.emit('run', recordingId, 'detectTime(Time)', initRecordingDone);
+                //}
             }
         }
         socket.emit('isAXAvailable', recordingId, axAvailable);
@@ -333,7 +401,7 @@ inspectorWidgetFindPlugin = function (pluginClass) {
     return null;
 };
 inspectorWidgetRemoveAnnotations = function (recordingId, recordingPath, annotations) {
-    var timelinePlugin = inspectorWidgetFindlinePlugin('TimelinePlugin');
+    var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
     if (!timelinePlugin) {
         console.log('Could not access amalia.js timeline plugin');
         return;
@@ -420,7 +488,7 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
                 }, null);
                 //console.log(data.list)
                 player.player.replaceAllMetadataById(data.id, data.list);
-                //resizePlayerHeight($('#window').height() - $('#timeline').height());
+                resizePlayerHeight($('#window').height() - $('#timeline').height());
             }
             , error: function (data, textStatus) {
                 console.log(url, 'error', data, textStatus)
@@ -466,6 +534,12 @@ resizePlayerHeight = function (height) {
     $('#blocklyDiv').height(height - $('#blocklyControlsDiv').height());
     var workspace = Blockly.getMainWorkspace();
     Blockly.svgResize(workspace);
+    inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+    if (!inspectorWidgetPlugin) {
+        console.log('Could not access amalia.js InspectorWidget plugin');
+        return;
+    }
+    inspectorWidgetPlugin.updateCanvasPosition();
 }
 
 function createButton(container, id, callback, iconId) {
@@ -512,16 +586,13 @@ function changeRecording(recordingId) {
                 // from timelinePlugin updateComponentsLineHeight()
                 var element = $('#timeline');
                 var headerAndFooterHeight = parseFloat(element.find('.timeaxis').height() + element.find('.module-nav-bar-container').height());
-                $( "#playercode" ).resizable( "option", "maxHeight", windowHeight-headerAndFooterHeight );
-                var maxHeight = $( ".selector" ).resizable( "option", "maxHeight" );
+                $("#playercode").resizable("option", "maxHeight", windowHeight - headerAndFooterHeight);
+                var maxHeight = $(".selector").resizable("option", "maxHeight");
                 resizePlayerHeight(y);
-                element.find('.components').first().css('height', windowHeight-y-headerAndFooterHeight);
-                element.css("height", windowHeight-y);
+                element.find('.components').first().css('height', windowHeight - y - headerAndFooterHeight);
+                element.css("height", windowHeight - y);
             })
             window.addEventListener('resize', function (event) {
-                var windowHeight = $('#window').height();
-                var timelineHeight = $("#timeline").height();
-                var playerHeight = $("#player").height();
                 resizePlayerHeight($('#window').height() - $("#timeline").height());
             });
             var blocklyDiv = document.getElementById('blocklyDiv');
