@@ -33,12 +33,9 @@ It is based on:
 
 First clone the repository.
 Then open a terminal in the source directory:
-* prepare front-end packages with bower
-```bower install```
-* install node.js dependencies with npm
-```npm install```
-* compile the JavaScript code with grunt
-```grunt```
+* prepare front-end packages with bower: `bower install`
+* install node.js dependencies with npm: `npm install`
+* compile the JavaScript code with grunt: `grunt`
 
 ## License
 
