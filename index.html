@@ -30,8 +30,16 @@
 
         <script src="bower_components/vkbeautify/vkbeautify.js"></script>
 
-        <script src="js/blockly-inspectorwidget.js"></script>
-        <script src="js/blockly-inspectorwidget-css.js"></script>
+        <script src="js/blockly-inspectorwidget/core/templates.js"></script>
+        <script src="js/blockly-inspectorwidget/core/field_template.js"></script>
+        <script src="js/blockly-inspectorwidget/core/thumbnail_mutator.js"></script>
+        <script src="js/blockly-inspectorwidget/blocks/templates.js"></script>
+        <script src="js/blockly-inspectorwidget/generators/javascript/inspector_widget.js"></script>
+        <script src="js/blockly-inspectorwidget/generators/javascript/templates.js"></script>
+        <script src="js/blockly-inspectorwidget/blocks/computer_vision.js"></script>
+        <script src="js/blockly-inspectorwidget/generators/javascript/computer_vision.js"></script>
+
+        <script src="js/blockly-inspectorwidget/core/css.js"></script>
         
         <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.min.css"/>
         <link href="css/inspectorwidget-default.css" rel="stylesheet">
@@ -54,11 +62,9 @@
                 <div style="width: 50%;float: right;background-color: #1d1d1d;" id="code">
                     <div id="blocklyDiv" style="width: 100%;"></div>
                     <xml id="toolbox" style="display: none">
-                        <category name="Templates">
+                        <category name="Computer Vision">
                             <block type="template_set"></block>
                             <block type="template_get"></block>
-                        </category>
-                        <category name="Extract">
                             <block type="extract_test"></block>
                             <block type="match_template"></block>
                             <block type="detect_alphanum"></block>
