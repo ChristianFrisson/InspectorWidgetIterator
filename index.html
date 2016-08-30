@@ -39,6 +39,9 @@
         <script src="js/blockly-inspectorwidget/blocks/computer_vision.js"></script>
         <script src="js/blockly-inspectorwidget/generators/javascript/computer_vision.js"></script>
 
+        <script src="js/blockly-inspectorwidget/blocks/input_events.js"></script>
+        <script src="js/blockly-inspectorwidget/generators/javascript/input_events.js"></script>
+        
         <script src="js/blockly-inspectorwidget/core/css.js"></script>
         
         <link rel="stylesheet" href="bower_components/fontawesome/css/font-awesome.min.css"/>
@@ -62,6 +65,9 @@
                 <div style="width: 50%;float: right;background-color: #1d1d1d;" id="code">
                     <div id="blocklyDiv" style="width: 100%;"></div>
                     <xml id="toolbox" style="display: none">
+                        <category name="Input Events">
+                            <block type="get_words"></block>
+                        </category>
                         <category name="Computer Vision">
                             <block type="template_set"></block>
                             <block type="template_get"></block>
