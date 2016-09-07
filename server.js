@@ -100,11 +100,8 @@ io.on('connection', function(socket){
     socket.on('status', function(id,done){
         processor.status(id,done);
     });
-    socket.on('templateAnnotationStatus', function(id,template,done){
-        processor.templateAnnotationStatus(id,template,done);
-    });
-    socket.on('accessibilityAnnotationStatus', function(id,template,done){
-        processor.accessibilityAnnotationStatus(id,template,done);
+    socket.on('annotationStatus', function(id,names,done){
+        processor.annotationStatus(id,names,done);
     });
     socket.on('accessibilityUnderMouse', function(id,time,x,y,done){
         processor.accessibilityUnderMouse(id,time,x,y,done);

@@ -312,7 +312,7 @@ Blockly.Blocks['template_set'] = {
    * @return {!Array.<string>} List of variable names.
    * @this Blockly.Block
    */
-    getTemplate: function() {
+    getTemplates: function() {
         return [this.getFieldValue('TEMPLATE')/*, 
                 this.getFieldValue('X'), 
                 this.getFieldValue('Y'), 
