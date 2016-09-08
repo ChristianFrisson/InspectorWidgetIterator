@@ -185,6 +185,77 @@ function createAccessibilityBlock(variable, mode) {
     block.appendChild(fieldMode);
     return block;
 }
+
+function updateAnnotations(recordingId, annotations) {
+    function statusDone(id, err, results, phase, progress) {
+        var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
+        if (!timelinePlugin) {
+            console.log('Could not access amalia.js timeline plugin');
+            return;
+        }
+        var player = $(".ajs").data('fr.ina.amalia.player');
+        if (!player) {
+            console.log('Could not access amalia.js player');
+            return;
+        }
+        var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
+        var duration = $(".ajs").data('fr.ina.amalia.player').player.getDuration();
+        var fps = $(".ajs").data('fr.ina.amalia.player').player.settings.framerate;
+        var durationTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(duration, fps, 'mms');
+        var currentTime = progress * duration;
+        var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
+        if (err !== null) {
+            results.forEach(function (result) {
+                result = JSON.parse(result);
+                var data;
+                if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
+                    data = result;
+                    var metadataId = result.id;
+                    var name = result.id.split('-')[0];
+                    var type = result.id.split('-')[1];
+                    /// Add annotation to timeline if not yet there
+                    if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
+                        var d = {
+                            name: name
+                            , segment: type === "segments"
+                            , overlay: false
+                            , event: type === "events"
+                            , type: 'ax'
+                        }
+                        var listOfLines = inspectorWidgetListLines([d]);
+                        timelinePlugin.createComponentsWithList(listOfLines)
+                        timelinePlugin.displayLinesNb += 1;
+                        timelinePlugin.settings.displayLines += 1;
+                        timelinePlugin.updateComponentsLineHeight();
+                        resizePlayerHeight($('#window').height() - $('#timeline').height());
+                    }
+                    if (progress < 1 && progress !== 0) {
+                        data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
+                            "label": name
+                            , "tcin": currentTS
+                            , "tcout": durationTS
+                            , "tclevel": 1.0
+                            , "color": '#00ccff'
+                        });
+                    }
+                    data = parser.processParserData(data);
+                    var viewControl = data.viewControl;
+                    var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
+                    player.player.updateBlockMetadata(data.id, {
+                        id: data.id
+                        , label: data.label
+                        , type: data.hasOwnProperty('type') ? data.type : 'default'
+                        , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
+                        , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
+                        , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                    }, null);
+                    player.player.replaceAllMetadataById(data.id, data.list);
+                }
+            });
+        }
+    }
+    socket.emit('annotationStatus', recordingId, annotations, statusDone);
+}
 inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
     if (!annotations || annotations.length === 0) {
         annotations = [];
@@ -334,28 +405,37 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 /// Try to load basic accessibility annotations
                 //var loadAx = confirm('Accessibility information available. Do you want to load it?');
                 //if (loadAx == true) {
-                
                 var accessibilityAnnotationDefinitions = [
-                    {'name':'AXFocusApplication','mode':'getFocusApplication'},
-                    {'name':'AXFocusWindow','mode':'getFocusWindow'},
-                    {'name':'AXPointedWidget','mode':'getPointedWidget'},
-                    {'name':'AXWorkspaceSnapshot','mode':'getWorkspaceSnapshot'}
+                    {
+                        'name': 'AXFocusApplication'
+                        , 'mode': 'getFocusApplication'
+                    }
+                    , {
+                        'name': 'AXFocusWindow'
+                        , 'mode': 'getFocusWindow'
+                    }
+                    , {
+                        'name': 'AXPointedWidget'
+                        , 'mode': 'getPointedWidget'
+                    }
+                    , {
+                        'name': 'AXWorkspaceSnapshot'
+                        , 'mode': 'getWorkspaceSnapshot'
+                    }
                 ];
-                
                 /// Generate annotation definition syntax for InspectorWidgetProcessor
                 var accessibilityAnnotationDefinition = '';
-                accessibilityAnnotationDefinitions.forEach(function(d){
+                accessibilityAnnotationDefinitions.forEach(function (d) {
                     accessibilityAnnotationDefinition += d.name + '=' + d.mode + '();\n';
                 });
-
                 /// Generate annotation blocks and add them to the blockly workspace
                 var accessibilityAnnotationBlocks;
                 var previousBlock;
                 var previousNext;
-                accessibilityAnnotationDefinitions.reverse().forEach(function(d,i){
-                    var currentBlock = createAccessibilityBlock(d.name,d.mode);
-                    var currentNext = document.createElement('next');   
-                    if(i>0){
+                accessibilityAnnotationDefinitions.reverse().forEach(function (d, i) {
+                    var currentBlock = createAccessibilityBlock(d.name, d.mode);
+                    var currentNext = document.createElement('next');
+                    if (i > 0) {
                         currentNext.appendChild(previousBlock);
                         currentBlock.appendChild(currentNext);
                     }
@@ -366,65 +446,9 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 startBlocks.appendChild(previousBlock);
                 var workspace = Blockly.getMainWorkspace();
                 Blockly.Xml.domToWorkspace(workspace, startBlocks);
-
-                function updateAccessibilityAnnotation(accessibilityAnnotation) {
-                    function accessibilityAnnotationReceived(recordingId, err, result, phase, progress) {
-                        if (err !== null) {
-                            var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
-                            if (!timelinePlugin) {
-                                console.log('Could not access amalia.js timeline plugin');
-                                return;
-                            }
-                            var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
-                            if (!player) {
-                                console.log('Could not access amalia.js player');
-                                return;
-                            }
-                            var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
-                            result = JSON.parse(result);
-                            var data;
-                            if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations && 'id' in result) {
-                                data = result;
-                            }
-                            var metadataId = data.id;
-                            var metatadaName = metadataId.split('-')[0];
-                            if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
-                                var d = {
-                                    name: metatadaName
-                                    , segment: false
-                                    , overlay: false
-                                    , event: true
-                                    , type: 'ax'
-                                }
-                                var listOfLines = inspectorWidgetListLines([d]);
-                                timelinePlugin.createComponentsWithList(listOfLines)
-                                timelinePlugin.displayLinesNb += 1;
-                                timelinePlugin.settings.displayLines += 1;
-                            }
-                            data = parser.processParserData(data);
-                            var viewControl = data.viewControl;
-                            var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
-                            player.player.updateBlockMetadata(data.id, {
-                                id: data.id
-                                , label: data.label
-                                , type: data.hasOwnProperty('type') ? data.type : 'default'
-                                , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
-                                , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
-                                , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
-                            }, null);
-                            player.player.replaceAllMetadataById(data.id, data.list);
-                            timelinePlugin.updateComponentsLineHeight();
-                            resizePlayerHeight($('#window').height() - $('#timeline').height());
-                        }
-                    }
-                    socket.emit('annotationStatus', recordingId, [accessibilityAnnotation], accessibilityAnnotationReceived);
-                }
-
                 function accessibilityAnnotationDone(id, err, result) {
                     var accessibilityAnnotations = ["AXFocusApplication", "AXFocusWindow", "AXPointedWidget", "AXWorkspaceSnapshot"];
-                    accessibilityAnnotations.forEach(function (accessibilityAnnotation) {
-                        updateAccessibilityAnnotation(accessibilityAnnotation);
-                    });
+                    updateAnnotations(id, accessibilityAnnotations)
                 };
                 socket.emit('run', recordingId, accessibilityAnnotationDefinition, accessibilityAnnotationDone);
             }
@@ -728,63 +752,6 @@ function runCode() {
         return;
     }
     var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
-
-    function updateAnnotations() {
-        function statusDone(id, err, results, phase, progress) {
-            var currentTime = progress * duration;
-            var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
-            if (err !== null) {
-                results.forEach(function (result) {
-                    result = JSON.parse(result);
-                    var data;
-                    if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
-                        data = result;
-                        var metadataId = result.id;
-                        var name = result.id.split('-')[0];
-                        var type = result.id.split('-')[1];
-                        /// Add annotation to timeline if not yet there
-                        if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
-                            var d = {
-                                name: name
-                                , segment: type === "segments"
-                                , overlay: false
-                                , event: type === "events"
-                                , type: 'progress'
-                            }
-                            var listOfLines = inspectorWidgetListLines([d]);
-                            timelinePlugin.createComponentsWithList(listOfLines)
-                            timelinePlugin.displayLinesNb += 1;
-                            timelinePlugin.settings.displayLines += 1;
-                            timelinePlugin.updateComponentsLineHeight();
-                            resizePlayerHeight($('#window').height() - $('#timeline').height());
-                        }
-                        if (progress < 1) {
-                            data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
-                                "label": name
-                                , "tcin": currentTS
-                                , "tcout": durationTS
-                                , "tclevel": 1.0
-                                , "color": '#00ccff'
-                            });
-                        }
-                        data = parser.processParserData(data);
-                        var viewControl = data.viewControl;
-                        var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
-                        player.player.updateBlockMetadata(data.id, {
-                            id: data.id
-                            , label: data.label
-                            , type: data.hasOwnProperty('type') ? data.type : 'default'
-                            , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
-                            , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
-                            , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
-                        }, null);
-                        player.player.replaceAllMetadataById(data.id, data.list);
-                    }
-                });
-            }
-        }
-        socket.emit('annotationStatus', recordingId, [], statusDone);
-    }
     if (socket.connected === false) {
         alert('InspectorWidgetProcessor server disconnected.');
         return;
@@ -822,7 +789,7 @@ function runCode() {
                 timelinePlugin.createComponentsWithList(listOfLines)
                 timelinePlugin.displayLinesNb += 1;
                 timelinePlugin.settings.displayLines += 1;
-                updateAnnotations([template])
+                updateAnnotations(recordingId,[template])
             }
         }
     });*/
@@ -838,16 +805,13 @@ function runCode() {
             return;
         }
         else {
-            updateAnnotations();
+            updateAnnotations(recordingId,[]);
             return;
         }
     }
     socket.emit('run', recordingId, code, runDone);
-    var duration = $(".ajs").data('fr.ina.amalia.player').player.getDuration();
-    var fps = $(".ajs").data('fr.ina.amalia.player').player.settings.framerate;
-    var durationTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(duration, fps, 'mms');
     timer = setInterval(function () {
-            updateAnnotations();
+            updateAnnotations(recordingId,[]);
         }, 10) // milliseconds
 }
 
