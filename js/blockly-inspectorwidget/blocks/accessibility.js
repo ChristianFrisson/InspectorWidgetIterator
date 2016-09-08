@@ -12,6 +12,7 @@ var ACCESSIBILITY_TOOLTIPS = {
     , 'getPointedWidget': "get pointed widget"
     , 'getWorkspaceSnapshot': "get workspace snapshot"
 , };
+Blockly.Blocks.InspectorWidget.Accessibility.HUE = 210;
 Blockly.Blocks['accessibility_actions'] = {
     /**
      * Block for text extraction.
@@ -32,7 +33,7 @@ Blockly.Blocks['accessibility_actions'] = {
             return ACCESSIBILITY_TOOLTIPS[op];
         });
         this.setHelpUrl('https://github.com/InspectorWidget/InspectorWidget');
-        this.setColour(Blockly.Blocks.variables.HUE);
+        this.setColour(Blockly.Blocks.InspectorWidget.Accessibility.HUE);
         if (ACCESSIBILITY_ACTIONS.length > 0) {
             this.updateShape_(ACCESSIBILITY_ACTIONS[0][1]);
         }

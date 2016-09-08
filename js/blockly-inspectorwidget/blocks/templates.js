@@ -36,7 +36,7 @@ goog.require('Blockly.ThumbnailMutator');
 /**
  * Common HSV hue for all blocks in this category.
  */
-Blockly.Blocks.templates.HUE = 110;
+Blockly.Blocks.templates.HUE = 280;
 
 /* Overload */
 

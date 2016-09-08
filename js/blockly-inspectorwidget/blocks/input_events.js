@@ -12,6 +12,7 @@ var INPUT_EVENTS_TOOLTIPS = {
     , 'getKeysTyped': "get keys typed (0-9 a-z A-Z -)"
     , 'getModifierKeysPressed': "get modifier keys pressed (Alt Ctrl Shift Meta)"
 , };
+Blockly.Blocks.InspectorWidget.InputEvents.HUE = 80;
 Blockly.Blocks['input_events_actions'] = {
     /**
      * Block for text extraction.
@@ -32,7 +33,7 @@ Blockly.Blocks['input_events_actions'] = {
             return INPUT_EVENTS_TOOLTIPS[op];
         });
         this.setHelpUrl('https://github.com/InspectorWidget/InspectorWidget');
-        this.setColour(Blockly.Blocks.variables.HUE);
+        this.setColour(Blockly.Blocks.InspectorWidget.InputEvents.HUE);
         if (INPUT_EVENTS_ACTIONS.length > 0) {
             this.updateShape_(INPUT_EVENTS_ACTIONS[0][1]);
         }
@@ -113,4 +114,4 @@ Blockly.Blocks['input_events_actions'] = {
             this.setFieldValue(newName, 'VAR');
         }
     }
-};
+}; 

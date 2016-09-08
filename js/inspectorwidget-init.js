@@ -48,22 +48,16 @@ inspectorWidgetVideoPath = function (recordingId, recordingPath) {
     return recordingPath + '/' + recordingId + '/mp4/' + recordingId + '.mp4';
 }
 trackColor = function (annotation) {
-    if (annotation.type === 'in:ptr') {
-        return '#7b3294';
+    if (annotation.source === 'input_events') {
+        return '#8ca55b'; // '#c2a5cf'
     }
-    else if (annotation.type === 'cv:tm') {
-        return '#c2a5cf';
+    else if (annotation.source === 'computer_vision') {
+        return '#704984'; // '#a6dba0'
     }
-    else if (annotation.type === 'cv:txt') {
-        return '#a6dba0';
+    else if (annotation.source === 'accessibility') {
+        return '#496684';
     }
-    else if (annotation.type === 'in:key') {
-        return '#008837';
-    }
-    else if (annotation.type === 'ax') {
-        return '#008CBA';
-    }
-    else if (annotation.type === 'progress') {
+    else if (annotation.source === 'progress') {
         return 'rgb(242, 80, 80)';
     }
     else {
@@ -213,6 +207,7 @@ function updateAnnotations(recordingId, annotations) {
                     var metadataId = result.id;
                     var name = result.id.split('-')[0];
                     var type = result.id.split('-')[1];
+                    var source = result.source;
                     /// Add annotation to timeline if not yet there
                     if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
                         var d = {
@@ -220,7 +215,7 @@ function updateAnnotations(recordingId, annotations) {
                             , segment: type === "segments"
                             , overlay: false
                             , event: type === "events"
-                            , type: 'ax'
+                            , source: source
                         }
                         var listOfLines = inspectorWidgetListLines([d]);
                         timelinePlugin.createComponentsWithList(listOfLines)
@@ -695,7 +690,7 @@ function changeRecording(recordingId) {
                     , segment: true
                     , overlay: true
                     , event: false
-                    , type: 'cv:tm'
+                    , source: 'computer_vision'
                 }
                 annotations = annotations.concat(annotation);
             });

@@ -1,5 +1,6 @@
 'use strict';
 goog.provide('Blockly.Blocks.InspectorWidget.ComputerVision');
+Blockly.Blocks.InspectorWidget.ComputerVision.HUE = 280;
 Blockly.Blocks['match_template'] = {
     init: function () {
         this.jsonInit({
@@ -17,7 +18,7 @@ Blockly.Blocks['match_template'] = {
             , "previousStatement": null
             , "nextStatement": null
         , });
-        this.setColour(Blockly.Blocks.templates.HUE);
+        this.setColour(Blockly.Blocks.InspectorWidget.ComputerVision.HUE);
     }
     , /**
      * Return all templates referenced by this block.
@@ -85,7 +86,7 @@ Blockly.Blocks['extract_test'] = {
             return TOOLTIPS[op];
         });
         this.setHelpUrl('https://github.com/InspectorWidget/InspectorWidget');
-        this.setColour(Blockly.Blocks.templates.HUE);
+        this.setColour(Blockly.Blocks.InspectorWidget.ComputerVision.HUE);
         if (EXTRACT_TESTS.length > 0) {
             this.updateShape_(EXTRACT_TESTS[0][1]);
         }
@@ -191,7 +192,7 @@ Blockly.Blocks['detect_alphanum'] = {
             return TOOLTIPS[op];
         });
         this.setHelpUrl('https://github.com/InspectorWidget/InspectorWidget');
-        this.setColour(Blockly.Blocks.templates.HUE);
+        this.setColour(Blockly.Blocks.InspectorWidget.ComputerVision.HUE);
         if (DETECT_TYPES.length > 0) {
             this.updateShape_(DETECT_TYPES[0][1]);
         }
