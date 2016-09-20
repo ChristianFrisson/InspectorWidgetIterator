@@ -103,8 +103,8 @@ io.on('connection', function(socket){
     socket.on('annotationStatus', function(id,names,done){
         processor.annotationStatus(id,names,done);
     });
-    socket.on('accessibilityUnderMouse', function(id,time,x,y,done){
-        processor.accessibilityUnderMouse(id,time,x,y,done);
+    socket.on('accessibilityHover', function(id,time,x,y,done){
+        processor.accessibilityHover(id,time,x,y,done);
     });
     socket.on('abort', function(id){
         processor.abort(id);

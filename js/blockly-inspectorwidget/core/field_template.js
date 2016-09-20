@@ -143,7 +143,7 @@ function findInspectorWidgetPlugin(arr) {
 function drawingCallback(caller,msg) {
     var block = caller.sourceBlock_;
         function done (id,err, result) {
-            console.log('from id',id);
+            //console.log('from id',id);
             if (err) {
                 console.log('Error',err);
                 return;

@@ -1,3 +1,5 @@
+/*var xmlviewer = require('xml-viewer');
+var insertCSS = require('insert-css');*/
 var socket = io();
 var timer;
 socket.on('result', function (data) {
@@ -222,7 +224,7 @@ function updateAnnotations(recordingId, annotations) {
                         timelinePlugin.displayLinesNb += 1;
                         timelinePlugin.settings.displayLines += 1;
                         timelinePlugin.updateComponentsLineHeight();
-                        resizePlayerHeight($('#window').height() - $('#timeline').height());
+                        optimizePlayerHeight();
                     }
                     if (progress < 1 && progress !== 0) {
                         data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
@@ -250,6 +252,208 @@ function updateAnnotations(recordingId, annotations) {
         }
     }
     socket.emit('annotationStatus', recordingId, annotations, statusDone);
+}
+/// Changes XML to JSON
+/// Adapted from http://stackoverflow.com/questions/28184804/drawing-a-collapsible-indented-tree-with-d3-xml-instead-of-d3-json
+function xmlToJson(xml) {
+    // ignore text leaves
+    //if(xml.hasChildNodes())
+    //{
+    //console.log('xml node', xml, xml.nodeName, xml.nodeType)
+    // Produce a node with a name
+    var obj = {
+        name: (xml.nodeName)
+            // + (xml.firstChild && xml.firstChild.nodeValue ? (" = " + xml.firstChild.nodeValue) : "")
+    };
+    if (xml.attributes) {
+        obj['attributes'] = [];
+        for (var i = 0; i < xml.attributes.length; i++) {
+            //obj['attributes'][xml.attributes.item(i).name] = xml.attributes.item(i).value;
+            obj['attributes'].push({
+                name: xml.attributes.item(i).name
+                , value: xml.attributes.item(i).value
+            });
+        }
+    }
+    // iterate over children
+    if (xml.childNodes) {
+        for (var i = 0; i < xml.childNodes.length; i++) {
+            // if recursive call returned a node, append it to children
+            if (xml.childNodes.item(i).nodeType !== 3) { // text
+                var child = xmlToJson(xml.childNodes.item(i));
+                if (child) {
+                    (obj.children || (obj.children = [])).push(child);
+                }
+            }
+        }
+    }
+    return obj;
+    /* }
+
+     return undefined;*/
+};
+/// Adapted from Mike Bostock’s Block 1093025 Updated August 30, 2016
+/// Collapsible Indented Tree
+/// http://bl.ocks.org/mbostock/1093025
+var accessibilityTreeMargin = {
+        top: 30
+        , right: 0
+        , bottom: 30
+        , left: 0
+    }
+    , barHeight = 20
+    , barWidth = 120 //width * .8;
+    
+    , accessibilityTreeWidth = barWidth * 2 - accessibilityTreeMargin.left - accessibilityTreeMargin.right
+    , accessibilityTreeHeight = 400
+var i = 0
+    , duration = 0
+    , root;
+var accessibilityTreeLayout = d3.layout.tree().nodeSize([0, 10]);
+var diagonal = d3.svg.diagonal().projection(function (d) {
+    return [d.y, d.x];
+});
+
+function colorAttributes(d) {
+    return "#c6dbef";
+}
+
+function colorTree(d) {
+    return d.hovered ? "#c6dbef" :  "#3182bd";
+}
+
+function updateAccessibilityAttributes(source, nodes, d) {
+    var accessibilityViewerSvg = d3.select("#accessibilityViewerCanvas")
+    d.attributes.forEach(function (n, i) {
+        n.x = (i + nodes.length + 1) * barHeight;
+        n.y = 0;
+    });
+    var attribute = accessibilityViewerSvg.selectAll("g.attribute").data(d.attributes, function (d) {
+        return d.name;
+    });
+    var attributeEnter = attribute.enter().append("g").attr("class", "attribute").attr("transform", function (d) {
+        return "translate(" + source.y0 + "," + (source.x0 + (nodes.length + 1) * barHeight) + ")";
+    }).style("opacity", 1e-6);
+    attributeEnter.append("rect").attr("y", -barHeight / 2).attr("height", barHeight).attr("width", barWidth).style("fill", colorAttributes);
+    attributeEnter.append("text").attr("dy", 3.5).attr("dx", 5.5).text(function (d) {
+        return d.name;
+    });
+    attributeEnter.append("rect").attr("y", -barHeight / 2).attr("x", barWidth).attr("height", barHeight).attr("width", barWidth).style("fill", colorAttributes);
+    attributeEnter.append("text").attr("dy", 3.5).attr("x", barWidth).attr("dx", 5.5).text(function (d) {
+        return d.value;
+    });
+    // Transition nodes to their new position.
+    attributeEnter.transition().duration(duration).attr("transform", function (d) {
+        return "translate(" + d.y + "," + d.x + ")";
+    }).style("opacity", 1);
+    attribute.transition().duration(duration).attr("transform", function (d) {
+        return "translate(" + d.y + "," + d.x + ")";
+    }).style("opacity", 1).select("rect").style("fill", colorAttributes);
+    // Transition exiting nodes to the parent's new position.
+    attribute.exit().transition().duration(duration).attr("transform", function (d) {
+        return "translate(" + source.y + "," + source.x + ")";
+    }).style("opacity", 1e-6).remove();
+}
+
+function updateAccessibilityTree(source) {
+    var accessibilityViewerSvg = d3.select("#accessibilityViewerCanvas")
+        // Compute the flattened node list. TODO use d3.layout.hierarchy.
+    var nodes = accessibilityTreeLayout.nodes(root);
+    var height = Math.max(400, nodes.length * barHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom);
+    d3.select("#accessibilityViewerSvg").transition().duration(duration).attr("height", height);
+    d3.select(self.frameElement).transition().duration(duration).style("height", height + "px");
+    // Remove attributes from previous node selection
+    var attribute = accessibilityViewerSvg.selectAll("g.attribute").remove();
+    // Compute the "layout".
+    var hovered = false;
+    nodes.forEach(function (n, i) {
+        n.x = i * barHeight;
+        if(i === nodes.length-1) n.hovered = !hovered;
+        if(n.hovered) hovered = true;
+    });
+    // Update the nodes…
+    var node = accessibilityViewerSvg.selectAll("g.node").data(nodes, function (d) {
+        return d.id || (d.id = ++i);
+    });
+    var nodeEnter = node.enter().append("g").attr("class", "node")
+    .attr("hovered", function (d,i) {
+        return (i === nodes.length-1);
+    })
+    .attr("transform", function (d) {
+        return "translate(" + source.y0 + "," + source.x0 + ")";
+    }).style("opacity", 1e-6)
+    // Enter any new nodes at the parent's previous position.
+    nodeEnter.append("rect").attr("y", -barHeight / 2).attr("height", barHeight).attr("width", barWidth).on("mouseover", function (d) {
+        d.hovered = true;
+        updateAccessibilityTree(source);
+        updateAccessibilityAttributes(source, nodes, d);
+    })
+    .on("mouseout", function (d) {
+            d.hovered = false;
+            //updateAccessibilityTree(d);
+        }).style("fill", colorTree).on("click", click)
+    // Display the last node attributes
+    //colorTree(nodes[nodes.length - 1]);
+    updateAccessibilityAttributes(source, nodes, nodes[nodes.length - 1])
+    nodeEnter.append("text").attr("dy", 3.5).attr("dx", 5.5).text(function (d) {
+        return d.name;
+    });
+    // Transition nodes to their new position.
+    nodeEnter.transition().duration(duration).attr("transform", function (d) {
+        return "translate(" + d.y + "," + d.x + ")";
+    }).style("opacity", 1);
+    node.transition().duration(duration).attr("transform", function (d) {
+        return "translate(" + d.y + "," + d.x + ")";
+    }).style("opacity", 1).select("rect").style("fill", colorTree);
+    // Transition exiting nodes to the parent's new position.
+    node.exit().transition().duration(duration).attr("transform", function (d) {
+        return "translate(" + source.y + "," + source.x + ")";
+    }).style("opacity", 1e-6).remove();
+    // Update the links…
+    var link = accessibilityViewerSvg.selectAll("path.link").data(accessibilityTreeLayout.links(nodes), function (d) {
+        return d.target.id;
+    });
+    // Enter any new links at the parent's previous position.
+    link.enter().insert("path", "g").attr("class", "link").attr("d", function (d) {
+        var o = {
+            x: source.x0
+            , y: source.y0
+        };
+        return diagonal({
+            source: o
+            , target: o
+        });
+    }).transition().duration(duration).attr("d", diagonal);
+    // Transition links to their new position.
+    link.transition().duration(duration).attr("d", diagonal);
+    // Transition exiting nodes to the parent's new position.
+    link.exit().transition().duration(duration).attr("d", function (d) {
+        var o = {
+            x: source.x
+            , y: source.y
+        };
+        return diagonal({
+            source: o
+            , target: o
+        });
+    }).remove();
+    // Stash the old positions for transition.
+    nodes.forEach(function (d) {
+        d.x0 = d.x;
+        d.y0 = d.y;
+    });
+}
+// Toggle children on click.
+function click(d) {
+    if (d.children) {
+        d._children = d.children;
+        d.children = null;
+    }
+    else {
+        d.children = d._children;
+        d._children = null;
+    }
+    updateAccessibilityTree(d);
 }
 inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
     if (!annotations || annotations.length === 0) {
@@ -322,7 +526,7 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
         self: f
     }, function () {
         inspectorWidgetAddAnnotations(recordingId, recordingPath, annotations)
-        resizePlayerHeight($('#window').height() - $('#timeline').height());
+        optimizePlayerHeight();
 
         function axAvailable(err, files) {
             if (err) {
@@ -336,6 +540,8 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                     console.log('Could not access amalia.js InspectorWidget plugin');
                     return;
                 }
+                d3.select("#accessibilityViewer").append("svg").attr("id", "accessibilityViewerSvg").attr("width", accessibilityTreeWidth + accessibilityTreeMargin.left + accessibilityTreeMargin.right).attr("height", accessibilityTreeHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom).append("g").attr("id", "accessibilityViewerCanvas").attr("transform", "translate(" + accessibilityTreeMargin.left + "," + accessibilityTreeMargin.top + ")");
+                resizeAccessibilityViewerWidth(accessibilityTreeWidth);
 
                 function onMouseMove(event) {
                     var videoSize = event.data.self.getVideoSize();
@@ -348,10 +554,10 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                     var x = event.clientX - rect.left;
                     var y = event.clientY - rect.top;
                     /// Handle accessibility on hover
-                    if (x - l > 0 && y - t > 0 && x - l < w && y - t < h && inspectorWidgetPlugin.doDraw === false) {
+                    if (x - l > 0 && y - t > 0 && x - l < w && y - t < h && inspectorWidgetPlugin.doDraw === false && event.ctrlKey === false) {
                         var time = event.data.self.mediaPlayer.getCurrentTime();
 
-                        function accessibilityUnderMouseReceived(id, err, x, y, w, h) {
+                        function accessibilityHoverReceived(id, err, x, y, w, h, axTreeParents, axTreeChildren) {
                             x = parseFloat(x);
                             y = parseFloat(y);
                             w = parseFloat(w);
@@ -374,8 +580,21 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                             inspectorWidgetPlugin.drawingHandler.attr('y', inspectorWidgetPlugin.drawingHandler.doDraw.startY);
                             inspectorWidgetPlugin.drawingHandler.attr('fill', '#3cf');
                             inspectorWidgetPlugin.drawingHandler.attr('fill-opacity', '0.3');
+                            //console.log(axTree);
+                            if (axTreeChildren === "empty" || axTreeChildren === "identical") {
+                                console.log(axTreeChildren)
+                            }
+                            if (axTreeParents !== "empty" && axTreeParents !== "identical") {
+                                var domParser = new DOMParser();
+                                console.log('new parents')
+                                var axDOM = domParser.parseFromString(axTreeParents, "text/xml");
+                                axJSON = xmlToJson(axDOM.firstChild);
+                                axJSON.x0 = 0;
+                                axJSON.y0 = 0;
+                                updateAccessibilityTree(root = axJSON);
+                            }
                         }
-                        socket.emit('accessibilityUnderMouse', recordingId, time, (x - l) / w, (y - t) / h, accessibilityUnderMouseReceived);
+                        socket.emit('accessibilityHover', recordingId, time, (x - l) / w, (y - t) / h, accessibilityHoverReceived);
                     }
                     /// Handle template annotation
                     if (event.data.self.drawing === true) {
@@ -395,7 +614,9 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 inspectorWidgetPlugin.container.on('mouseleave', {
                     self: inspectorWidgetPlugin
                 }, function (event) {
-                    event.data.self.drawingHandler.hide();
+                    if (event.ctrlKey === false) {
+                        event.data.self.drawingHandler.hide();
+                    }
                 });
                 /// Try to load basic accessibility annotations
                 //var loadAx = confirm('Accessibility information available. Do you want to load it?');
@@ -441,6 +662,7 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 startBlocks.appendChild(previousBlock);
                 var workspace = Blockly.getMainWorkspace();
                 Blockly.Xml.domToWorkspace(workspace, startBlocks);
+
                 function accessibilityAnnotationDone(id, err, result) {
                     var accessibilityAnnotations = ["AXFocusApplication", "AXFocusWindow", "AXPointedWidget", "AXWorkspaceSnapshot"];
                     updateAnnotations(id, accessibilityAnnotations)
@@ -556,7 +778,7 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
                 }, null);
                 //console.log(data.list)
                 player.player.replaceAllMetadataById(data.id, data.list);
-                resizePlayerHeight($('#window').height() - $('#timeline').height());
+                optimizePlayerHeight();
             }
             , error: function (data, textStatus) {
                 console.log(url, 'error', data, textStatus)
@@ -577,6 +799,13 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
 resizePlayerWidth = function (width) {
     $('#playercode').width($(document).width());
     $('#code').width($(document).width() - width);
+    $('#blockly').width($(document).width() - width - $('#accessibilityViewer').width() - 10);
+    var workspace = Blockly.getMainWorkspace();
+    Blockly.svgResize(workspace);
+}
+resizeAccessibilityViewerWidth = function (width) {
+    $('#accessibilityViewer').width(width);
+    $('#blockly').width($(document).width() - $('#player').width() - width - 10);
     var workspace = Blockly.getMainWorkspace();
     Blockly.svgResize(workspace);
 }
@@ -597,6 +826,8 @@ resizePlayerHeight = function (height) {
         plugin.style.top = 0 /*$('#recording').height()*/ + 'px';
         plugin.style.height = $('.player').height() + 'px';
     })
+    $('#accessibilityViewer').height(height);
+    $('#blockly').height(height);
     $('#blocklyControlsDiv').height(barsHeight);
     $('#code').height(height);
     $('#blocklyDiv').height(height - $('#blocklyControlsDiv').height());
@@ -608,6 +839,9 @@ resizePlayerHeight = function (height) {
         return;
     }
     inspectorWidgetPlugin.updateCanvasPosition();
+}
+optimizePlayerHeight = function () {
+    resizePlayerHeight($('#window').height() - $("#timeline").height());
 }
 
 function createButton(container, id, callback, iconId) {
@@ -637,7 +871,7 @@ function changeRecording(recordingId) {
         }
         else {
             $("#player").resizable({
-                handles: 'e, w'
+                handles: 'e'
                 , ghost: false
             , });
             $('#player').resize(function (event, ui) {
@@ -660,8 +894,17 @@ function changeRecording(recordingId) {
                 element.find('.components').first().css('height', windowHeight - y - headerAndFooterHeight);
                 element.css("height", windowHeight - y);
             })
+            $("#accessibilityViewer").resizable({
+                handles: 'e'
+                , ghost: false
+            , });
+            $('#accessibilityViewer').resize(function (event, ui) {
+                var x = event.clientX;
+                var accessibilityViewerWidth = x - $('#player').width();
+                resizeAccessibilityViewerWidth(accessibilityViewerWidth);
+            })
             window.addEventListener('resize', function (event) {
-                resizePlayerHeight($('#window').height() - $("#timeline").height());
+                optimizePlayerHeight();
             });
             var blocklyDiv = document.getElementById('blocklyDiv');
             if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
@@ -700,6 +943,10 @@ function changeRecording(recordingId) {
     }
     socket.emit('annotations', recordingId, annotationsReceived);
 }
+var recordings = document.getElementById('recordings');
+recordings.onchange = function () {
+    changeRecording(this.value);
+};
 
 function showCode() {
     var workspace = Blockly.getMainWorkspace();
@@ -789,7 +1036,7 @@ function runCode() {
         }
     });*/
     timelinePlugin.updateComponentsLineHeight();
-    resizePlayerHeight($('#window').height() - $('#timeline').height());
+    optimizePlayerHeight();
 
     function runDone(id, err, result) {
         clearInterval(timer);
@@ -800,13 +1047,13 @@ function runCode() {
             return;
         }
         else {
-            updateAnnotations(recordingId,[]);
+            updateAnnotations(recordingId, []);
             return;
         }
     }
     socket.emit('run', recordingId, code, runDone);
     timer = setInterval(function () {
-            updateAnnotations(recordingId,[]);
+            updateAnnotations(recordingId, []);
         }, 10) // milliseconds
 }
 
