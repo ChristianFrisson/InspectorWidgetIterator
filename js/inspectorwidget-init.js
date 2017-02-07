@@ -44,10 +44,10 @@ inspectorWidgetAnnotationPath = function (recordingId, recordingPath, annotation
     if (type === 'segment') {
         annotationSuffix = segmentsSuffix;
     }
-    return recordingPath + '/' + recordingId + '/json/' + recordingId + '-' + annotation.name + annotationSuffix + '.json';
+    return recordingPath + '/' + recordingId + '/' + recordingId + '-' + annotation.name + annotationSuffix + '.json';
 }
 inspectorWidgetVideoPath = function (recordingId, recordingPath) {
-    return recordingPath + '/' + recordingId + '/mp4/' + recordingId + '.mp4';
+    return recordingPath + '/' + recordingId + '/' + recordingId + '.mp4';
 }
 trackColor = function (annotation) {
     if (annotation.source === 'input_events') {

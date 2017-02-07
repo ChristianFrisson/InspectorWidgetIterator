@@ -151,7 +151,7 @@ function drawingCallback(caller,msg) {
             else{
                 var id = block.getFieldValue('VIDEO');
                 var template = block.getFieldValue('TEMPLATE');
-                var url = '/data/' + id + '/mp4/' + template + '.png';
+                var url = '/data/' + id + '/' + template + '.png';
                 block.thumbnailMutator_.changeSrc(url);
                 return;
             }
