@@ -10,10 +10,10 @@
     ],
     "dependencies" : {
         "amalia.js" : "https://github.com/InspectorWidget/amalia.js.git#InspectorWidget",
-        "blockly" : "https://github.com/InspectorWidget/blockly.git#master",
+        "blockly" : "https://github.com/InspectorWidget/blockly.git#InspectorWidget",
         "dc.js" : "https://github.com/dc-js/dc.js.git#master",
-        "require.js" : "https://github.com/dc-js/dc.js.git#master",
         "jquery-ui" : "*",
+        "raphael" : "~2.2.7",
         "vkbeautify" : "*",
         "fontawesome" : "4.5.0"
     },

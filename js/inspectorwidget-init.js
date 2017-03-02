@@ -1,6 +1,26 @@
-/*var xmlviewer = require('xml-viewer');
-var insertCSS = require('insert-css');*/
-var socket = io();
+var io = require('socket.io-client')('http://localhost:9998');
+var socket = io;
+// from https://github.com/marcobiedermann/jquery-demo
+var $ = require('jquery')
+window.$ = window.jQuery = $;
+//
+require('jquery-ui')
+var raphael = Raphael = require('raphael')
+//window.raphael = raphael
+//
+require('amalia.js/build/js/amalia.js.min.js')
+require('amalia.js/build/js/amalia.js-logger.min.js')
+require('amalia.js/build/js/amalia.js-plugin-timeline.min.js')
+require('amalia.js/build/js/amalia.js-plugin-editor.min.js')
+require('amalia.js/build/js/amalia.js-plugin-overlay.min.js')
+require('amalia.js/build/js/amalia.js-plugin-inspectorwidget.min.js')
+require('amalia.js/build/js/i18n/amalia.js-message-en.js')
+//
+require('vkbeautify')
+var d3 = require('d3')
+//
+require('blockly')
+//
 var timer;
 socket.on('result', function (data) {
     console.log('Result: ', data)
@@ -12,12 +32,12 @@ socket.on('error', function (msg) {
 });
 var segmentsSuffix = '-segments';
 var overlaysSuffix = '-overlays';
-// in:ptr <span style="color:#7b3294">Hook Events from Pointer</span> -- 
-// cv:tm <span style="color:#c2a5cf">Computer Vision Template Matching</span> -- 
-// cv:txt <span style="color:#a6dba0">Computer Vision Text Recognition</span> -- 
+// in:ptr <span style="color:#7b3294">Hook Events from Pointer</span> --
+// cv:tm <span style="color:#c2a5cf">Computer Vision Template Matching</span> --
+// cv:txt <span style="color:#a6dba0">Computer Vision Text Recognition</span> --
 // in:key <span style="color:#008837">Hook Events from Keyboard</span> --
 // nested <span style="color:#008CBA">Combined Variables</span>
-function idsReceived(err, result) {
+idsReceived = function(err, result) {
     if (err) {
         console.log('ids Error', err);
         //io.emit('error', err);
@@ -165,7 +185,7 @@ inspectorWidgetListSegments = function (annotations) {
     return listOfSegments;
 };
 
-function createAccessibilityBlock(variable, mode) {
+createAccessibilityBlock = function(variable, mode) {
     var block = document.createElement('block');
     block.setAttribute('type', "accessibility_actions");
     var mutation = document.createElement('mutation');
@@ -182,7 +202,7 @@ function createAccessibilityBlock(variable, mode) {
     return block;
 }
 
-function updateAnnotations(recordingId, annotations) {
+updateAnnotations = function(recordingId, annotations) {
     function statusDone(id, err, results, phase, progress) {
         var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
         if (!timelinePlugin) {
@@ -255,7 +275,7 @@ function updateAnnotations(recordingId, annotations) {
 }
 /// Changes XML to JSON
 /// Adapted from http://stackoverflow.com/questions/28184804/drawing-a-collapsible-indented-tree-with-d3-xml-instead-of-d3-json
-function xmlToJson(xml) {
+xmlToJson = function(xml) {
     // ignore text leaves
     //if(xml.hasChildNodes())
     //{
@@ -303,7 +323,7 @@ var accessibilityTreeMargin = {
     }
     , barHeight = 20
     , barWidth = 120 //width * .8;
-    
+
     , accessibilityTreeWidth = barWidth * 2 - accessibilityTreeMargin.left - accessibilityTreeMargin.right
     , accessibilityTreeHeight = 400
 var i = 0
@@ -521,14 +541,17 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
         }
     };
     var f = $("#defaultPlayer").mediaPlayer(settings);
+
     resizePlayerHeight($('#window').height() - $("#timeline").height());
     f.on(fr.ina.amalia.player.PlayerEventType.STARTED, {
         self: f
     }, function () {
         inspectorWidgetAddAnnotations(recordingId, recordingPath, annotations)
+
+
         optimizePlayerHeight();
 
-        function axAvailable(err, files) {
+        axAvailable = function(err, files) {
             if (err) {
                 alert('No accessibility information available')
                 return;
@@ -543,7 +566,7 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 d3.select("#accessibilityViewer").append("svg").attr("id", "accessibilityViewerSvg").attr("width", accessibilityTreeWidth + accessibilityTreeMargin.left + accessibilityTreeMargin.right).attr("height", accessibilityTreeHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom).append("g").attr("id", "accessibilityViewerCanvas").attr("transform", "translate(" + accessibilityTreeMargin.left + "," + accessibilityTreeMargin.top + ")");
                 resizeAccessibilityViewerWidth(accessibilityTreeWidth);
 
-                function onMouseMove(event) {
+                onMouseMove = function(event) {
                     var videoSize = event.data.self.getVideoSize();
                     var player = event.data.self.mediaPlayer.getMediaPlayer();
                     var l = (player.width() - videoSize.w) / 2;
@@ -558,10 +581,18 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                         var time = event.data.self.mediaPlayer.getCurrentTime();
 
                         function accessibilityHoverReceived(id, err, x, y, w, h, axTreeParents, axTreeChildren) {
+							/*if(err){
+								console.log('Error with receiving accessibility hover information:',err);
+								return;
+							};*/
                             x = parseFloat(x);
                             y = parseFloat(y);
                             w = parseFloat(w);
                             h = parseFloat(h);
+							if(isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)){
+								console.log('NaN values in accessibility hover');
+								return;
+							}
                             inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
                             if (!inspectorWidgetPlugin) {
                                 console.log('Could not access amalia.js InspectorWidget plugin');
@@ -661,9 +692,9 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 var startBlocks = document.getElementById('startBlocks');
                 startBlocks.appendChild(previousBlock);
                 var workspace = Blockly.getMainWorkspace();
-                Blockly.Xml.domToWorkspace(workspace, startBlocks);
+                Blockly.Xml.domToWorkspace(workspace,startBlocks);
 
-                function accessibilityAnnotationDone(id, err, result) {
+                accessibilityAnnotationDone = function(id, err, result) {
                     var accessibilityAnnotations = ["AXFocusApplication", "AXFocusWindow", "AXPointedWidget", "AXWorkspaceSnapshot"];
                     updateAnnotations(id, accessibilityAnnotations)
                 };
@@ -739,16 +770,18 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
         return;
     }
     var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
-    if (!timelinePlugin) {
+    if (timelinePlugin === null) {
         console.log('Could not access amalia.js timeline plugin');
         return;
     }
+    console.log('passed')
     var dataServices = inspectorWidgetListDataServices(recordingId, recordingPath, annotations);
     annotations.forEach(function (d) {
         var metadataId = d.name + '-segments';
         if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
             var listOfLines = inspectorWidgetListLines([d]);
-            timelinePlugin.createComponentsWithList(listOfLines)
+            console.log('listOfLines',listOfLines)
+            //timelinePlugin.createComponentsWithList(listOfLines)
             timelinePlugin.displayLinesNb += 1;
             timelinePlugin.settings.displayLines += 1;
         }
@@ -913,7 +946,7 @@ function changeRecording(recordingId) {
                     , toolbox: document.getElementById('toolbox')
                 });
                 /* Enable this line to load a default annotation program */
-                Blockly.Xml.domToWorkspace(workspace, document.getElementById('startBlocks'));
+                Blockly.Xml.domToWorkspace(workspace,document.getElementById('startBlocks'));
             }
             var blocklyControls = document.getElementById('blocklyControlsDiv');
             createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
@@ -921,7 +954,7 @@ function changeRecording(recordingId) {
             document.getElementById('saveCode').setAttribute('download', 'InspectorWidget.xml');
             createButton(blocklyControls, 'runCode', 'runCode()', 'fa-play');
             createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
-            createButton(blocklyControls, 'status', 'status()', 'fa-question-circle');
+            createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
             var annotations = [];
             files.forEach(function (file) {
                 var stem = file.split('/').pop().split('.').reverse().pop();
@@ -948,7 +981,7 @@ recordings.onchange = function () {
     changeRecording(this.value);
 };
 
-function showCode() {
+showCode = function() {
     var workspace = Blockly.getMainWorkspace();
     // Generate JavaScript code and display it.
     Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
@@ -956,18 +989,20 @@ function showCode() {
     alert(code);
 }
 
-function status() {
+processStatus = function() {
     var recordings = document.getElementById('recordings');
     var recordingId = recordings.value;
 
     function done(id, err, result, phase, progress) {
         if (err) {
             console.log('Error', err);
+            alert('Error: '+err)
             //io.emit('error', err);
             return;
         }
         else {
             console.log('Result', result);
+            alert('Result: '+result)
             //io.emit('result', result);
             return;
         }
@@ -979,7 +1014,7 @@ function status() {
     socket.emit('status', recordingId, done);
 }
 
-function runCode() {
+runCode = function () {
     var workspace = Blockly.getMainWorkspace();
     var recordings = document.getElementById('recordings');
     var recordingId = recordings.value;
@@ -1038,7 +1073,7 @@ function runCode() {
     timelinePlugin.updateComponentsLineHeight();
     optimizePlayerHeight();
 
-    function runDone(id, err, result) {
+    runDone = function (id, err, result) {
         clearInterval(timer);
         $('#runCode')[0].disabled = false;
         $('#abort')[0].disabled = true;
@@ -1057,7 +1092,7 @@ function runCode() {
         }, 10) // milliseconds
 }
 
-function saveCode() {
+saveCode = function () {
     // Generate JavaScript code and export it.
     var workspace = Blockly.getMainWorkspace();
     var xml = Blockly.Xml.workspaceToDom(workspace);
@@ -1072,7 +1107,7 @@ function saveCode() {
     document.getElementById("saveCode").href = url;
 }
 
-function abort() {
+abort = function() {
     var recordings = document.getElementById('recordings');
     var recordingId = recordings.value;
     clearInterval(timer);

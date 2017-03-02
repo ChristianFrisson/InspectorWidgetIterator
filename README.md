@@ -35,13 +35,15 @@ First clone the repository.
 Then open a terminal in the source directory:
 * prepare front-end packages with bower: `bower install`
 * install node.js dependencies with npm: `npm install`
-* compile the JavaScript code with grunt: `grunt`
+* compile JavaScript dependencies with grunt: `grunt`
+* prepare the JavaScript code: `npm run browserify`
+* start the Electron app: `npm start`
 
 ## License
 
 InspectorWidget Iterator is released under the terms of the [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html) license.
 
 ## Authors
- * [Christian Frisson](http://christian.frisson.re) (University of Mons): creator and main developer
+ * [Christian Frisson](http://christian.frisson.re) (initially University of Mons, now Inria Lille Nord-Europe): creator and main developer
  * [Gilles Bailly](http://www.gillesbailly.fr) (LTCI, CNRS, Télécom-ParisTech): contributor
- * [Sylvain Malacria](http://www.malacria.fr) (INRIA Lille): contributor
+ * [Sylvain Malacria](http://www.malacria.fr) (Inria Lille Nord-Europe): contributor

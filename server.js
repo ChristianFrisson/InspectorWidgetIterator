@@ -4,11 +4,12 @@
 var port = 9998;
 var localdatapath = './data/';
 var datapath;
-var ids = [];
 var express = require('express');
 var app = express();
+
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
 var fs = require('fs');
 var glob = require("glob")
 var addon = require('InspectorWidgetProcessor');
@@ -61,7 +62,7 @@ else {
     return;
 }
 app.use('/bower_components', express.static(__dirname + '/bower_components'))
-app.use('/node_modules', express.static(__dirname + '/bower_components'))
+app.use('/node_modules', express.static(__dirname + '/node_modules'))
 app.use('/css', express.static(__dirname + '/css'))
 app.use('/js', express.static(__dirname + '/js'))
 app.use('/build', express.static(__dirname + '/build'))
@@ -121,6 +122,7 @@ io.on('connection', function (socket) {
             cwd: datapath
         }, function (er, files) {
             console.log(er, files)
+            var ids = [];
             if (files) {
                 files.forEach(function (file) {
                     var id = file.split('/')[0];
