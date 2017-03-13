@@ -25,42 +25,61 @@ function isPathWritable(path) {
         return false;
     }
 }
-if (process.argv.length === 3) {
-    var arg = process.argv[2];
-    if (isPathWritable(arg)) {
-        glob(arg + "/Dummy.json", {
-            cwd: arg
-        }, function (er, files) {
-            if (files.length === 0) {
-                var encoding = 'utf8';
-                var content = fs.readFileSync(localdatapath + "/Dummy.json", encoding);
-                fs.writeFileSync(arg + "/Dummy.json", content, encoding);
-            }
-        })
-        datapath = arg;
-    }
+
+console.log('Usage: optional argument for setting data path: --datapath=')
+
+if (process.argv.length >= 2 && process.argv[process.argv.length-1].toString().startsWith('--datapath=') ){
+  var datapatharg = process.argv[process.argv.length-1].toString()
+   var datapathcheck = datapatharg.split('--datapath=')
+   if(datapathcheck.length === 2){
+     var path = datapathcheck[1];
+     if(isPathWritable(path)){
+        datapath = path;
+        console.log('Using data path',datapath);
+     }
+     else{
+       console.log('Desired data path not writable',path);
+       return;
+     }
+   }
+   else{
+     console.log('Wrong data path argument',datapatharg)
+     return;
+   }
 }
-if (process.argv.length === 2) {
+
+if (datapath === undefined || datapath === null) {
     var home = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
-    var arg = path.resolve.apply(path.resolve, [home].concat('Movies'));
-    console.log('path', arg)
-    if (isPathWritable(arg)) {
-        glob(arg + "/Dummy.json", {
-            cwd: arg
+    var path = path.resolve.apply(path.resolve, [home].concat('Movies'));
+    console.log('path', path)
+    if (isPathWritable(path)) {
+        glob(path + "/Dummy.json", {
+            cwd: path
         }, function (er, files) {
             if (files.length === 0) {
                 var encoding = 'utf8';
                 var content = fs.readFileSync(localdatapath + "/Dummy.json", encoding);
-                fs.writeFileSync(arg + "/Dummy.json", content, encoding);
+                fs.writeFileSync(path + "/Dummy.json", content, encoding);
             }
         })
-        datapath = arg;
+        datapath = path;
     }
 }
-else {
-    console.log("Please specify the data path as only argument")
-    return;
+
+/// Make sure the data path has a Dummy.json file.
+/// (currently required for how we use amalia.js)
+if (isPathWritable(datapath)) {
+    glob(datapath + "/Dummy.json", {
+        cwd: datapath
+    }, function (er, files) {
+        if (files.length === 0) {
+            var encoding = 'utf8';
+            var content = fs.readFileSync(localdatapath + "/Dummy.json", encoding);
+            fs.writeFileSync(datapath + "/Dummy.json", content, encoding);
+        }
+    })
 }
+
 app.use('/bower_components', express.static(__dirname + '/bower_components'))
 app.use('/node_modules', express.static(__dirname + '/node_modules'))
 app.use('/css', express.static(__dirname + '/css'))
