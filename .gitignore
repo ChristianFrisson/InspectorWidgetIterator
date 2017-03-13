@@ -40,3 +40,6 @@ bower_components
 
 # browserified files
 js/inspectorwidget-init-browserified.js*
+
+# Electron packages
+build
