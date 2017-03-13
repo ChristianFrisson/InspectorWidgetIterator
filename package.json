@@ -26,14 +26,16 @@
 		"grunt-git-deploy": "~0.1.1",
 		"electron": "^1.4.1",
 		"browserify": "*",
-		"debowerify": "*"
+		"debowerify": "*",
+		"appdmg": "*"
 	},
 	"dependencies": {
 		"InspectorWidgetProcessor": "https://github.com/InspectorWidget/InspectorWidgetProcessor.git",
         "express": "4.13.4",
         "socket.io": "1.7.2",
         "glob": "7.0.3",
-        "socket.io-client": "*"
+        "socket.io-client": "*",
+				"electron-packager": "*"
 	},
 	"cmake-js": {
         "runtime": "electron",
@@ -46,7 +48,9 @@
 	"main": "main.js",
     "scripts": {
         "browserify": "browserify -t debowerify  --debug ./js/inspectorwidget-init.js -o ./js/inspectorwidget-init-browserified.js",
-		"start": "electron .",
-        "server": "server.js"
+        "start": "node ./node_modules/.bin/electron .",
+        "server": "node ./server.js",
+        "pack:darwin": "./node_modules/.bin/electron-packager . --icon=./icon/InspectorWidgetIterator --overwrite=true --arch=all --platform=darwin --out=build",
+        "dist:darwin": "rm build/**.dmg && ./node_modules/.bin/appdmg ./config/appdmg.json build/InspectorWidgetIterator.dmg -v"
     }
 }
