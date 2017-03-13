@@ -20,6 +20,27 @@ require('vkbeautify')
 var d3 = require('d3')
 //
 require('blockly')
+
+//
+var vex = require('vex-js')
+vex.registerPlugin(require('vex-dialog'))
+vex.defaultOptions.className = 'vex-theme-os'
+
+/** Override Blockly.alert() with custom implementation. */
+//Blockly.alert = function(message, callback) {}
+
+/** Override Blockly.confirm() with custom implementation. */
+//Blockly.confirm = function(message, callback) {}
+
+/** Override Blockly.prompt() with custom implementation. */
+Blockly.prompt = function(message, defaultValue, callback) {
+  vex.dialog.prompt({
+      message: message,
+      placeholder: defaultValue,
+      callback: callback
+  })
+}
+
 //
 var timer;
 socket.on('result', function (data) {
@@ -692,7 +713,7 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 var startBlocks = document.getElementById('startBlocks');
                 startBlocks.appendChild(previousBlock);
                 var workspace = Blockly.getMainWorkspace();
-                Blockly.Xml.domToWorkspace(workspace,startBlocks);
+                Blockly.Xml.domToWorkspace(startBlocks,workspace);
 
                 accessibilityAnnotationDone = function(id, err, result) {
                     var accessibilityAnnotations = ["AXFocusApplication", "AXFocusWindow", "AXPointedWidget", "AXWorkspaceSnapshot"];
@@ -946,7 +967,7 @@ function changeRecording(recordingId) {
                     , toolbox: document.getElementById('toolbox')
                 });
                 /* Enable this line to load a default annotation program */
-                Blockly.Xml.domToWorkspace(workspace,document.getElementById('startBlocks'));
+                Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),workspace);
             }
             var blocklyControls = document.getElementById('blocklyControlsDiv');
             createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
@@ -1114,4 +1135,51 @@ abort = function() {
     $('#runCode')[0].disabled = false;
     $('#abort')[0].disabled = true;
     socket.emit('abort', recordingId);
+}
+
+var templateDefinedCallback = function(caller,msg) {
+    var block = caller.sourceBlock_;
+        function done (id,err, result) {
+            //console.log('from id',id);
+            if (err) {
+                console.log('Error',err);
+            }
+            else{
+                var id = block.getFieldValue('VIDEO');
+                var template = block.getFieldValue('TEMPLATE');
+                var url = '/data/' + id + '/' + template + '.png';
+                block.thumbnailMutator_.changeSrc(url);
+            }
+            var inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+            if(inspectorWidgetPlugin){
+              inspectorWidgetPlugin.clearCanvas();
+            }
+        }
+    if( msg !== null && 'rx' in msg){
+        // Update block values
+        var recordingFullPath = msg.src;
+        var recordingId = recordingFullPath.split('\\').pop().split('/').pop().split('.').reverse().pop();
+        block.setFieldValue(msg.x,'X');
+        block.setFieldValue(msg.y,'Y');
+        block.setFieldValue(msg.rx,'W');
+        block.setFieldValue(msg.ry,'H');
+        block.setFieldValue(recordingId,'VIDEO');
+        block.setFieldValue(msg.time,'TIME');
+
+        // Submit block code to InspectorWidget to get the template image
+        var workspace = Blockly.getMainWorkspace();
+        Blockly.JavaScript.init(workspace);
+        var code = Blockly.JavaScript.blockToCode(block);
+        //var socket = io();
+        socket.emit('run',recordingId,code,done);
+    }
+}
+
+// Overload the defined template callback
+Blockly.FieldTemplate.prototype.defineTemplateCallback = function(caller,name) {
+  var inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+  if(inspectorWidgetPlugin){
+    inspectorWidgetPlugin.openAddShape(caller,templateDefinedCallback);
+  }
+  return;
 }
