@@ -14,8 +14,12 @@ let mainWindow
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
-
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    backgroundColor: '#000000'
+  });
+  mainWindow.maximize()
   // and load the index.html of the app.
   /*mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
@@ -26,7 +30,7 @@ function createWindow () {
   mainWindow.loadURL('http://localhost:9998/')
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  //mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
