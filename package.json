@@ -35,7 +35,8 @@
         "socket.io": "1.7.2",
         "glob": "7.0.3",
         "socket.io-client": "*",
-				"electron-packager": "*"
+		"electron-packager": "*",
+		"vex-js": "^3.1.0"
 	},
 	"cmake-js": {
         "runtime": "electron",
@@ -51,6 +52,6 @@
         "start": "node ./node_modules/.bin/electron .",
         "server": "node ./server.js",
         "pack:darwin": "./node_modules/.bin/electron-packager . --icon=./icon/InspectorWidgetIterator --overwrite=true --arch=all --platform=darwin --out=build",
-        "dist:darwin": "rm build/**.dmg && ./node_modules/.bin/appdmg ./config/appdmg.json build/InspectorWidgetIterator.dmg -v"
+        "dist:darwin": "dmg=InspectorWidgetIterator-x64-$(git rev-parse --short HEAD).dmg;if [ -e build/$dmg ]; then rm build/$dmg; fi && ./node_modules/.bin/appdmg ./config/appdmg.json build/$dmg -v"
     }
 }

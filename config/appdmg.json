@@ -1,0 +1,19 @@
+{
+  "title": "InspectorWidget Iterator",
+  "icon": "../icon/InspectorWidgetIterator.icns",
+  "icon-size": 80,
+  "contents": [
+    {
+      "x": 440,
+      "y": 150,
+      "type": "link",
+      "path": "/Applications"
+    },
+    {
+      "x": 120,
+      "y": 150,
+      "type": "file",
+      "path": "../build/InspectorWidgetIterator-darwin-x64/InspectorWidgetIterator.app"
+    }
+  ]
+}
