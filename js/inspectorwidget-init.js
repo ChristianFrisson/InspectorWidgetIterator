@@ -243,9 +243,15 @@ updateAnnotations = function(recordingId, annotations) {
         var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
         if (err !== null) {
             results.forEach(function (result) {
+              var error = null;
+               try {
                 result = JSON.parse(result);
+              }
+              catch (error){
+                console.log('Error ',error,' parsing result ',result)
+              }
                 var data;
-                if ('localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
+                if (error === null && 'localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
                     data = result;
                     var metadataId = result.id;
                     var name = result.id.split('-')[0];
@@ -276,6 +282,7 @@ updateAnnotations = function(recordingId, annotations) {
                             , "color": '#00ccff'
                         });
                     }
+
                     data = parser.processParserData(data);
                     var viewControl = data.viewControl;
                     var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
