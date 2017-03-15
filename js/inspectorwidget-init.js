@@ -1117,7 +1117,7 @@ runCode = function () {
     socket.emit('run', recordingId, code, runDone);
     timer = setInterval(function () {
             updateAnnotations(recordingId, []);
-        }, 10) // milliseconds
+        }, 250) // milliseconds
 }
 
 saveCode = function () {
