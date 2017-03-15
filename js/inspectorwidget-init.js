@@ -992,7 +992,7 @@ function changeRecording(recordingId) {
                 var annotation = {
                     name: label
                     , segment: true
-                    , overlay: true
+                    , overlay: false
                     , event: false
                     , source: 'computer_vision'
                 }
