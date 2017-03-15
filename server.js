@@ -58,7 +58,7 @@ if (datapath === undefined || datapath === null) {
         }, function (er, files) {
             if (files.length === 0) {
                 var encoding = 'utf8';
-                var content = fs.readFileSync(localdatapath + "/Dummy.json", encoding);
+                var content = '';
                 fs.writeFileSync(path + "/Dummy.json", content, encoding);
             }
         })
@@ -74,7 +74,7 @@ if (isPathWritable(datapath)) {
     }, function (er, files) {
         if (files.length === 0) {
             var encoding = 'utf8';
-            var content = fs.readFileSync(localdatapath + "/Dummy.json", encoding);
+            var content = '';
             fs.writeFileSync(datapath + "/Dummy.json", content, encoding);
         }
     })
