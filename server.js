@@ -166,7 +166,20 @@ io.on('connection', function (socket) {
             }
         })
     });
-    socket.on('isAXAvailable', function (id, done) {
+    socket.on('inputEventsAvailable', function (id, done) {
+        glob(id + "/" + id + ".txt", {
+            cwd: datapath
+        }, function (er, files) {
+            console.log(er, files)
+            if (files) {
+                done('', files);
+            }
+            else {
+                done(er, '');
+            }
+        })
+    });
+    socket.on('accessibilityAvailable', function (id, done) {
         glob(id + "/" + id + ".xml", {
             cwd: datapath
         }, function (er, files) {

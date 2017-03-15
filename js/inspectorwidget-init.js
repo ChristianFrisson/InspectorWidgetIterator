@@ -206,23 +206,6 @@ inspectorWidgetListSegments = function (annotations) {
     return listOfSegments;
 };
 
-createAccessibilityBlock = function(variable, mode) {
-    var block = document.createElement('block');
-    block.setAttribute('type', "accessibility_actions");
-    var mutation = document.createElement('mutation');
-    mutation.setAttribute('input_', mode);
-    block.appendChild(mutation);
-    var fieldVar = document.createElement('field');
-    fieldVar.setAttribute("name", "VAR");
-    fieldVar.textContent = variable;
-    block.appendChild(fieldVar);
-    var fieldMode = document.createElement('field');
-    fieldMode.setAttribute("name", "MODE");
-    fieldMode.textContent = mode;
-    block.appendChild(fieldMode);
-    return block;
-}
-
 updateAnnotations = function(recordingId, annotations) {
     function statusDone(id, err, results, phase, progress) {
         var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
@@ -503,6 +486,43 @@ function click(d) {
     }
     updateAccessibilityTree(d);
 }
+
+loadBasicAnnotations = function(recordingId,definitions){
+var annotations = [];
+definitions.forEach(function(d){
+  annotations = annotations.concat([d.variable]);
+})
+/// Generate annotation definition syntax for InspectorWidgetProcessor
+var annotationDefinition = '';
+definitions.forEach(function (d) {
+    annotationDefinition += d.variable + '=' + d.action + '();\n';
+});
+/// Generate annotation blocks and add them to the blockly workspace
+var workspace = Blockly.getMainWorkspace();
+definitions.forEach(function (d, i) {
+  var allBlocks = workspace.getAllBlocks();
+  var block = workspace.newBlock(d.type);
+  block.setFieldValue(d.variable,'VAR');
+  block.setFieldValue(d.action,'MODE')
+  block.initSvg();
+  block.render();
+  if(allBlocks.length>0){
+    var prevBlock = allBlocks[allBlocks.length-1];
+    var nextConn = prevBlock.nextConnection;
+    var prevConn = block.previousConnection;
+    if(nextConn && prevConn){
+      prevConn.connect(nextConn);
+    }
+  }
+
+})
+annotationDone = function(id, err, result) {
+    updateAnnotations(id, annotations)
+};
+socket.emit('run', recordingId, annotationDefinition, annotationDone);
+}
+
+
 inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
     if (!annotations || annotations.length === 0) {
         annotations = [];
@@ -576,8 +596,40 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
     }, function () {
         inspectorWidgetAddAnnotations(recordingId, recordingPath, annotations)
 
-
         optimizePlayerHeight();
+
+        inputEventsAvailable = function(err, files) {
+            if (err) {
+                alert('No accessibility information available')
+                return;
+            }
+            else {
+              var definitions = [
+                  {
+                      'variable': 'Words'
+                      , 'action': 'getWords'
+                      , 'type' : 'input_events_actions'
+                  }
+                  , {
+                      'variable': 'PointerClicks'
+                      , 'action': 'getPointerClicks'
+                      , 'type' : 'input_events_actions'
+                  }
+                  , {
+                      'variable': 'KeysTyped'
+                      , 'action': 'getKeysTyped'
+                      , 'type' : 'input_events_actions'
+                  }
+                  , {
+                      'variable': 'ModifierKeysPressed'
+                      , 'action': 'getModifierKeysPressed'
+                      , 'type' : 'input_events_actions'
+                  }
+              ];
+              loadBasicAnnotations(recordingId,definitions);
+            }
+        }
+        socket.emit('inputEventsAvailable', recordingId, inputEventsAvailable);
 
         axAvailable = function(err, files) {
             if (err) {
@@ -680,56 +732,34 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                 /// Try to load basic accessibility annotations
                 //var loadAx = confirm('Accessibility information available. Do you want to load it?');
                 //if (loadAx == true) {
-                var accessibilityAnnotationDefinitions = [
+                var definitions = [
                     {
-                        'name': 'AXFocusApplication'
-                        , 'mode': 'getFocusApplication'
+                        'variable': 'FocusApplication'
+                        , 'action': 'getFocusApplication'
+                        , 'type' : 'accessibility_actions'
                     }
                     , {
-                        'name': 'AXFocusWindow'
-                        , 'mode': 'getFocusWindow'
+                        'variable': 'FocusWindow'
+                        , 'action': 'getFocusWindow'
+                        , 'type' : 'accessibility_actions'
                     }
                     , {
-                        'name': 'AXPointedWidget'
-                        , 'mode': 'getPointedWidget'
+                        'variable': 'PointedWidget'
+                        , 'action': 'getPointedWidget'
+                        , 'type' : 'accessibility_actions'
                     }
                     , {
-                        'name': 'AXWorkspaceSnapshot'
-                        , 'mode': 'getWorkspaceSnapshot'
+                        'variable': 'WorkspaceSnapshot'
+                        , 'action': 'getWorkspaceSnapshot'
+                        , 'type' : 'accessibility_actions'
                     }
                 ];
-                /// Generate annotation definition syntax for InspectorWidgetProcessor
-                var accessibilityAnnotationDefinition = '';
-                accessibilityAnnotationDefinitions.forEach(function (d) {
-                    accessibilityAnnotationDefinition += d.name + '=' + d.mode + '();\n';
-                });
-                /// Generate annotation blocks and add them to the blockly workspace
-                var accessibilityAnnotationBlocks;
-                var previousBlock;
-                var previousNext;
-                accessibilityAnnotationDefinitions.reverse().forEach(function (d, i) {
-                    var currentBlock = createAccessibilityBlock(d.name, d.mode);
-                    var currentNext = document.createElement('next');
-                    if (i > 0) {
-                        currentNext.appendChild(previousBlock);
-                        currentBlock.appendChild(currentNext);
-                    }
-                    previousBlock = currentBlock;
-                    previousNext = currentNext;
-                });
-                var startBlocks = document.getElementById('startBlocks');
-                startBlocks.appendChild(previousBlock);
-                var workspace = Blockly.getMainWorkspace();
-                Blockly.Xml.domToWorkspace(startBlocks,workspace);
 
-                accessibilityAnnotationDone = function(id, err, result) {
-                    var accessibilityAnnotations = ["AXFocusApplication", "AXFocusWindow", "AXPointedWidget", "AXWorkspaceSnapshot"];
-                    updateAnnotations(id, accessibilityAnnotations)
-                };
-                socket.emit('run', recordingId, accessibilityAnnotationDefinition, accessibilityAnnotationDone);
+                loadBasicAnnotations(recordingId,definitions);
             }
         };
-        socket.emit('isAXAvailable', recordingId, axAvailable);
+        socket.emit('accessibilityAvailable', recordingId, axAvailable);
+
         //}
     });
 };
