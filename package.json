@@ -51,7 +51,7 @@
         "browserify": "browserify -t debowerify  --debug ./js/inspectorwidget-init.js -o ./js/inspectorwidget-init-browserified.js",
         "start": "node ./node_modules/.bin/electron .",
         "server": "node ./server.js",
-        "pack:darwin": "./node_modules/.bin/electron-packager . --icon=./icon/InspectorWidgetIterator --overwrite=true --arch=all --platform=darwin --out=build",
+        "pack:darwin": "dir=./build/InspectorWidgetIterator-darwin-x64;if [ -e $dir ]; then rm -dfr $dir; fi && ./node_modules/.bin/electron-packager . --icon=./icon/InspectorWidgetIterator --overwrite=true --arch=all --platform=darwin --out=build",
         "dist:darwin": "dmg=InspectorWidgetIterator-x64-$(git rev-parse --short HEAD).dmg;if [ -e build/$dmg ]; then rm build/$dmg; fi && ./node_modules/.bin/appdmg ./config/appdmg.json build/$dmg -v"
     }
 }
