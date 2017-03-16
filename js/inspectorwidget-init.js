@@ -27,27 +27,35 @@ vex.registerPlugin(require('vex-dialog'))
 vex.defaultOptions.className = 'vex-theme-os'
 
 /** Override Blockly.alert() with custom implementation. */
-//Blockly.alert = function(message, callback) {}
+Blockly.alert = function(message, callback) {
+    vex.dialog.alert(message)
+}
 
 /** Override Blockly.confirm() with custom implementation. */
-//Blockly.confirm = function(message, callback) {}
+Blockly.confirm = function(message, callback) {
+    vex.dialog.confirm({
+        message: message,
+        callback: callback
+    })
+}
 
 /** Override Blockly.prompt() with custom implementation. */
 Blockly.prompt = function(message, defaultValue, callback) {
-  vex.dialog.prompt({
-      message: message,
-      placeholder: defaultValue,
-      callback: callback
-  })
+    vex.dialog.prompt({
+        message: message,
+        placeholder: defaultValue,
+        callback: callback
+    })
 }
+
 
 //
 var timer;
-socket.on('result', function (data) {
+socket.on('result', function(data) {
     console.log('Result: ', data)
     alert('Result: ' + data);
 });
-socket.on('error', function (msg) {
+socket.on('error', function(msg) {
     console.log('Error: ', msg)
     alert('Error: ' + msg);
 });
@@ -63,21 +71,20 @@ idsReceived = function(err, result) {
         console.log('ids Error', err);
         //io.emit('error', err);
         return;
-    }
-    else {
+    } else {
         var recordings = document.getElementById('recordings');
-        result.forEach(function (id) {
-                var option = document.createElement('option');
-                option.value = id;
-                option.text = id;
-                recordings.appendChild(option);
-            })
-            //io.emit('result', result);
+        result.forEach(function(id) {
+            var option = document.createElement('option');
+            option.value = id;
+            option.text = id;
+            recordings.appendChild(option);
+        })
+        //io.emit('result', result);
         return;
     }
 }
 socket.emit('ids', idsReceived);
-inspectorWidgetAnnotationPath = function (recordingId, recordingPath, annotation, type) {
+inspectorWidgetAnnotationPath = function(recordingId, recordingPath, annotation, type) {
     annotationSuffix = '';
     if (type === 'overlay') {
         annotationSuffix = overlaysSuffix;
@@ -87,27 +94,23 @@ inspectorWidgetAnnotationPath = function (recordingId, recordingPath, annotation
     }
     return recordingPath + '/' + recordingId + '/' + recordingId + '-' + annotation.name + annotationSuffix + '.json';
 }
-inspectorWidgetVideoPath = function (recordingId, recordingPath) {
+inspectorWidgetVideoPath = function(recordingId, recordingPath) {
     return recordingPath + '/' + recordingId + '/' + recordingId + '.mp4';
 }
-trackColor = function (annotation) {
+trackColor = function(annotation) {
     if (annotation.source === 'input_events') {
         return '#8ca55b'; // '#c2a5cf'
-    }
-    else if (annotation.source === 'computer_vision') {
+    } else if (annotation.source === 'computer_vision') {
         return '#704984'; // '#a6dba0'
-    }
-    else if (annotation.source === 'accessibility') {
+    } else if (annotation.source === 'accessibility') {
         return '#496684';
-    }
-    else if (annotation.source === 'progress') {
+    } else if (annotation.source === 'progress') {
         return 'rgb(242, 80, 80)';
-    }
-    else {
+    } else {
         return '#FFFFFF';
     }
 }
-inspectorWidgetListDataServices = function (recordingId, recordingPath, annotations) {
+inspectorWidgetListDataServices = function(recordingId, recordingPath, annotations) {
     var dummyDataService = [recordingPath + '/Dummy.json'];
     var dataServices = [];
     if (!annotations || annotations.length === 0) {
@@ -116,14 +119,14 @@ inspectorWidgetListDataServices = function (recordingId, recordingPath, annotati
         dataServices = dummyDataService;
         return dataServices;
     }
-    annotations.forEach(function (d, i) {
+    annotations.forEach(function(d, i) {
         if (d.overlay) {
             dataServices = dataServices.concat({
-                protocol: "http"
-                , url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'), // format : 'json',
+                protocol: "http",
+                url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'), // format : 'json',
                 parameters: {
-                    editingMode: true
-                    , mainLevel: true
+                    editingMode: true,
+                    mainLevel: true
                 }
             });
         }
@@ -133,7 +136,7 @@ inspectorWidgetListDataServices = function (recordingId, recordingPath, annotati
     });
     return dataServices;
 };
-inspectorWidgetListDataServiced = function (recordingId, recordingPath, annotations) {
+inspectorWidgetListDataServiced = function(recordingId, recordingPath, annotations) {
     var dummyDataService = [recordingPath + '/Dummy.json'];
     var dataServices = [];
     if (!annotations || annotations.length === 0) {
@@ -141,64 +144,63 @@ inspectorWidgetListDataServiced = function (recordingId, recordingPath, annotati
         dataServices = dummyDataService;
         return dataServices;
     }
-    annotations.forEach(function (d, i) {
+    annotations.forEach(function(d, i) {
         if (d.overlay) {
             dataServices = dataServices.concat({
-                protocol: "http"
-                , url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'), // format : 'json',
+                protocol: "http",
+                url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'overlay'), // format : 'json',
                 parameters: {
-                    editingMode: true
-                    , mainLevel: true
+                    editingMode: true,
+                    mainLevel: true
                 }
             });
         }
         if (d.segment) {
             dataServices = dataServices.concat({
-                protocol: "http"
-                , url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'segment'), // format : 'json',
+                protocol: "http",
+                url: inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'segment'), // format : 'json',
                 parameters: {
-                    editingMode: true
-                    , mainLevel: true
+                    editingMode: true,
+                    mainLevel: true
                 }
             });
         }
     });
     return dataServices;
 };
-inspectorWidgetListLines = function (annotations) {
+inspectorWidgetListLines = function(annotations) {
     var listOfLines = [];
     if (!annotations || annotations.length === 0) {
         annotations = [];
         return listOfLines;
     }
-    annotations.forEach(function (d, i) {
+    annotations.forEach(function(d, i) {
         if (d.segment) {
             listOfLines = listOfLines.concat({
-                title: d.name
-                , type: 'segment'
-                , metadataId: d.name + '-segments'
-                , color: trackColor(d)
+                title: d.name,
+                type: 'segment',
+                metadataId: d.name + '-segments',
+                color: trackColor(d)
             })
-        }
-        else if (d.event) {
+        } else if (d.event) {
             listOfLines = listOfLines.concat({
-                title: d.name
-                , type: 'cuepoint'
-                , metadataId: d.name + '-events'
-                , color: trackColor(d)
-                , pointNav: true
+                title: d.name,
+                type: 'cuepoint',
+                metadataId: d.name + '-events',
+                color: trackColor(d),
+                pointNav: true
             })
         }
     });
     return listOfLines;
 };
-inspectorWidgetListSegments = function (annotations) {
+inspectorWidgetListSegments = function(annotations) {
     var listOfSegments = [];
     if (!annotations || annotations.length === 0) {
         annotations = [];
         return listOfSegments;
     }
-    annotations.forEach(function (d, i) {
+    annotations.forEach(function(d, i) {
         if (d.segment) {
             listOfSegments = listOfSegments.concat(d.name + '-segments')
         }
@@ -225,14 +227,13 @@ updateAnnotations = function(recordingId, annotations) {
         var currentTime = progress * duration;
         var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
         if (err !== null) {
-            results.forEach(function (result) {
-              var error = null;
-               try {
-                result = JSON.parse(result);
-              }
-              catch (error){
-                console.log('Error ',error,' parsing result ',result)
-              }
+            results.forEach(function(result) {
+                var error = null;
+                try {
+                    result = JSON.parse(result);
+                } catch (error) {
+                    console.log('Error ', error, ' parsing result ', result)
+                }
                 var data;
                 if (error === null && 'localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
                     data = result;
@@ -243,11 +244,11 @@ updateAnnotations = function(recordingId, annotations) {
                     /// Add annotation to timeline if not yet there
                     if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
                         var d = {
-                            name: name
-                            , segment: type === "segments"
-                            , overlay: false
-                            , event: type === "events"
-                            , source: source
+                            name: name,
+                            segment: type === "segments",
+                            overlay: false,
+                            event: type === "events",
+                            source: source
                         }
                         var listOfLines = inspectorWidgetListLines([d]);
                         timelinePlugin.createComponentsWithList(listOfLines)
@@ -258,11 +259,11 @@ updateAnnotations = function(recordingId, annotations) {
                     }
                     if (progress < 1 && progress !== 0) {
                         data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
-                            "label": name
-                            , "tcin": currentTS
-                            , "tcout": durationTS
-                            , "tclevel": 1.0
-                            , "color": '#00ccff'
+                            "label": name,
+                            "tcin": currentTS,
+                            "tcout": durationTS,
+                            "tclevel": 1.0,
+                            "color": '#00ccff'
                         });
                     }
 
@@ -270,12 +271,12 @@ updateAnnotations = function(recordingId, annotations) {
                     var viewControl = data.viewControl;
                     var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
                     player.player.updateBlockMetadata(data.id, {
-                        id: data.id
-                        , label: data.label
-                        , type: data.hasOwnProperty('type') ? data.type : 'default'
-                        , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
-                        , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
-                        , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                        id: data.id,
+                        label: data.label,
+                        type: data.hasOwnProperty('type') ? data.type : 'default',
+                        author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : '',
+                        color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf',
+                        shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
                     }, null);
                     player.player.replaceAllMetadataById(data.id, data.list);
                 }
@@ -294,15 +295,15 @@ xmlToJson = function(xml) {
     // Produce a node with a name
     var obj = {
         name: (xml.nodeName)
-            // + (xml.firstChild && xml.firstChild.nodeValue ? (" = " + xml.firstChild.nodeValue) : "")
+        // + (xml.firstChild && xml.firstChild.nodeValue ? (" = " + xml.firstChild.nodeValue) : "")
     };
     if (xml.attributes) {
         obj['attributes'] = [];
         for (var i = 0; i < xml.attributes.length; i++) {
             //obj['attributes'][xml.attributes.item(i).name] = xml.attributes.item(i).value;
             obj['attributes'].push({
-                name: xml.attributes.item(i).name
-                , value: xml.attributes.item(i).value
+                name: xml.attributes.item(i).name,
+                value: xml.attributes.item(i).value
             });
         }
     }
@@ -327,21 +328,22 @@ xmlToJson = function(xml) {
 /// Collapsible Indented Tree
 /// http://bl.ocks.org/mbostock/1093025
 var accessibilityTreeMargin = {
-        top: 30
-        , right: 0
-        , bottom: 30
-        , left: 0
-    }
-    , barHeight = 20
-    , barWidth = 120 //width * .8;
+        top: 30,
+        right: 0,
+        bottom: 30,
+        left: 0
+    },
+    barHeight = 20,
+    barWidth = 120 //width * .8;
 
-    , accessibilityTreeWidth = barWidth * 2 - accessibilityTreeMargin.left - accessibilityTreeMargin.right
-    , accessibilityTreeHeight = 400
-var i = 0
-    , duration = 0
-    , root;
+    ,
+    accessibilityTreeWidth = barWidth * 2 - accessibilityTreeMargin.left - accessibilityTreeMargin.right,
+    accessibilityTreeHeight = 400
+var i = 0,
+    duration = 0,
+    root;
 var accessibilityTreeLayout = d3.layout.tree().nodeSize([0, 10]);
-var diagonal = d3.svg.diagonal().projection(function (d) {
+var diagonal = d3.svg.diagonal().projection(function(d) {
     return [d.y, d.x];
 });
 
@@ -350,45 +352,45 @@ function colorAttributes(d) {
 }
 
 function colorTree(d) {
-    return d.hovered ? "#c6dbef" :  "#3182bd";
+    return d.hovered ? "#c6dbef" : "#3182bd";
 }
 
 function updateAccessibilityAttributes(source, nodes, d) {
     var accessibilityViewerSvg = d3.select("#accessibilityViewerCanvas")
-    d.attributes.forEach(function (n, i) {
+    d.attributes.forEach(function(n, i) {
         n.x = (i + nodes.length + 1) * barHeight;
         n.y = 0;
     });
-    var attribute = accessibilityViewerSvg.selectAll("g.attribute").data(d.attributes, function (d) {
+    var attribute = accessibilityViewerSvg.selectAll("g.attribute").data(d.attributes, function(d) {
         return d.name;
     });
-    var attributeEnter = attribute.enter().append("g").attr("class", "attribute").attr("transform", function (d) {
+    var attributeEnter = attribute.enter().append("g").attr("class", "attribute").attr("transform", function(d) {
         return "translate(" + source.y0 + "," + (source.x0 + (nodes.length + 1) * barHeight) + ")";
     }).style("opacity", 1e-6);
     attributeEnter.append("rect").attr("y", -barHeight / 2).attr("height", barHeight).attr("width", barWidth).style("fill", colorAttributes);
-    attributeEnter.append("text").attr("dy", 3.5).attr("dx", 5.5).text(function (d) {
+    attributeEnter.append("text").attr("dy", 3.5).attr("dx", 5.5).text(function(d) {
         return d.name;
     });
     attributeEnter.append("rect").attr("y", -barHeight / 2).attr("x", barWidth).attr("height", barHeight).attr("width", barWidth).style("fill", colorAttributes);
-    attributeEnter.append("text").attr("dy", 3.5).attr("x", barWidth).attr("dx", 5.5).text(function (d) {
+    attributeEnter.append("text").attr("dy", 3.5).attr("x", barWidth).attr("dx", 5.5).text(function(d) {
         return d.value;
     });
     // Transition nodes to their new position.
-    attributeEnter.transition().duration(duration).attr("transform", function (d) {
+    attributeEnter.transition().duration(duration).attr("transform", function(d) {
         return "translate(" + d.y + "," + d.x + ")";
     }).style("opacity", 1);
-    attribute.transition().duration(duration).attr("transform", function (d) {
+    attribute.transition().duration(duration).attr("transform", function(d) {
         return "translate(" + d.y + "," + d.x + ")";
     }).style("opacity", 1).select("rect").style("fill", colorAttributes);
     // Transition exiting nodes to the parent's new position.
-    attribute.exit().transition().duration(duration).attr("transform", function (d) {
+    attribute.exit().transition().duration(duration).attr("transform", function(d) {
         return "translate(" + source.y + "," + source.x + ")";
     }).style("opacity", 1e-6).remove();
 }
 
 function updateAccessibilityTree(source) {
     var accessibilityViewerSvg = d3.select("#accessibilityViewerCanvas")
-        // Compute the flattened node list. TODO use d3.layout.hierarchy.
+    // Compute the flattened node list. TODO use d3.layout.hierarchy.
     var nodes = accessibilityTreeLayout.nodes(root);
     var height = Math.max(400, nodes.length * barHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom);
     d3.select("#accessibilityViewerSvg").transition().duration(duration).attr("height", height);
@@ -397,79 +399,79 @@ function updateAccessibilityTree(source) {
     var attribute = accessibilityViewerSvg.selectAll("g.attribute").remove();
     // Compute the "layout".
     var hovered = false;
-    nodes.forEach(function (n, i) {
+    nodes.forEach(function(n, i) {
         n.x = i * barHeight;
-        if(i === nodes.length-1) n.hovered = !hovered;
-        if(n.hovered) hovered = true;
+        if (i === nodes.length - 1) n.hovered = !hovered;
+        if (n.hovered) hovered = true;
     });
     // Update the nodes…
-    var node = accessibilityViewerSvg.selectAll("g.node").data(nodes, function (d) {
+    var node = accessibilityViewerSvg.selectAll("g.node").data(nodes, function(d) {
         return d.id || (d.id = ++i);
     });
     var nodeEnter = node.enter().append("g").attr("class", "node")
-    .attr("hovered", function (d,i) {
-        return (i === nodes.length-1);
-    })
-    .attr("transform", function (d) {
-        return "translate(" + source.y0 + "," + source.x0 + ")";
-    }).style("opacity", 1e-6)
+        .attr("hovered", function(d, i) {
+            return (i === nodes.length - 1);
+        })
+        .attr("transform", function(d) {
+            return "translate(" + source.y0 + "," + source.x0 + ")";
+        }).style("opacity", 1e-6)
     // Enter any new nodes at the parent's previous position.
-    nodeEnter.append("rect").attr("y", -barHeight / 2).attr("height", barHeight).attr("width", barWidth).on("mouseover", function (d) {
-        d.hovered = true;
-        updateAccessibilityTree(source);
-        updateAccessibilityAttributes(source, nodes, d);
-    })
-    .on("mouseout", function (d) {
+    nodeEnter.append("rect").attr("y", -barHeight / 2).attr("height", barHeight).attr("width", barWidth).on("mouseover", function(d) {
+            d.hovered = true;
+            updateAccessibilityTree(source);
+            updateAccessibilityAttributes(source, nodes, d);
+        })
+        .on("mouseout", function(d) {
             d.hovered = false;
             //updateAccessibilityTree(d);
         }).style("fill", colorTree).on("click", click)
     // Display the last node attributes
     //colorTree(nodes[nodes.length - 1]);
     updateAccessibilityAttributes(source, nodes, nodes[nodes.length - 1])
-    nodeEnter.append("text").attr("dy", 3.5).attr("dx", 5.5).text(function (d) {
+    nodeEnter.append("text").attr("dy", 3.5).attr("dx", 5.5).text(function(d) {
         return d.name;
     });
     // Transition nodes to their new position.
-    nodeEnter.transition().duration(duration).attr("transform", function (d) {
+    nodeEnter.transition().duration(duration).attr("transform", function(d) {
         return "translate(" + d.y + "," + d.x + ")";
     }).style("opacity", 1);
-    node.transition().duration(duration).attr("transform", function (d) {
+    node.transition().duration(duration).attr("transform", function(d) {
         return "translate(" + d.y + "," + d.x + ")";
     }).style("opacity", 1).select("rect").style("fill", colorTree);
     // Transition exiting nodes to the parent's new position.
-    node.exit().transition().duration(duration).attr("transform", function (d) {
+    node.exit().transition().duration(duration).attr("transform", function(d) {
         return "translate(" + source.y + "," + source.x + ")";
     }).style("opacity", 1e-6).remove();
     // Update the links…
-    var link = accessibilityViewerSvg.selectAll("path.link").data(accessibilityTreeLayout.links(nodes), function (d) {
+    var link = accessibilityViewerSvg.selectAll("path.link").data(accessibilityTreeLayout.links(nodes), function(d) {
         return d.target.id;
     });
     // Enter any new links at the parent's previous position.
-    link.enter().insert("path", "g").attr("class", "link").attr("d", function (d) {
+    link.enter().insert("path", "g").attr("class", "link").attr("d", function(d) {
         var o = {
-            x: source.x0
-            , y: source.y0
+            x: source.x0,
+            y: source.y0
         };
         return diagonal({
-            source: o
-            , target: o
+            source: o,
+            target: o
         });
     }).transition().duration(duration).attr("d", diagonal);
     // Transition links to their new position.
     link.transition().duration(duration).attr("d", diagonal);
     // Transition exiting nodes to the parent's new position.
-    link.exit().transition().duration(duration).attr("d", function (d) {
+    link.exit().transition().duration(duration).attr("d", function(d) {
         var o = {
-            x: source.x
-            , y: source.y
+            x: source.x,
+            y: source.y
         };
         return diagonal({
-            source: o
-            , target: o
+            source: o,
+            target: o
         });
     }).remove();
     // Stash the old positions for transition.
-    nodes.forEach(function (d) {
+    nodes.forEach(function(d) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
@@ -479,51 +481,58 @@ function click(d) {
     if (d.children) {
         d._children = d.children;
         d.children = null;
-    }
-    else {
+    } else {
         d.children = d._children;
         d._children = null;
     }
     updateAccessibilityTree(d);
 }
 
-loadBasicAnnotations = function(recordingId,definitions){
-var annotations = [];
-definitions.forEach(function(d){
-  annotations = annotations.concat([d.variable]);
-})
-/// Generate annotation definition syntax for InspectorWidgetProcessor
-var annotationDefinition = '';
-definitions.forEach(function (d) {
-    annotationDefinition += d.variable + '=' + d.action + '();\n';
-});
-/// Generate annotation blocks and add them to the blockly workspace
-var workspace = Blockly.getMainWorkspace();
-definitions.forEach(function (d, i) {
-  var allBlocks = workspace.getAllBlocks();
-  var block = workspace.newBlock(d.type);
-  block.setFieldValue(d.variable,'VAR');
-  block.setFieldValue(d.action,'MODE')
-  block.initSvg();
-  block.render();
-  if(allBlocks.length>0){
-    var prevBlock = allBlocks[allBlocks.length-1];
-    var nextConn = prevBlock.nextConnection;
-    var prevConn = block.previousConnection;
-    if(nextConn && prevConn){
-      prevConn.connect(nextConn);
-    }
-  }
+loadBasicAnnotations = function(recordingId, definitions) {
+    var annotations = [];
+    definitions.forEach(function(d) {
+        annotations = annotations.concat([d.variable]);
+    })
+    /// Generate annotation definition syntax for InspectorWidgetProcessor
+    var annotationDefinition = '';
+    definitions.forEach(function(d) {
+        annotationDefinition += d.variable + '=' + d.action + '();\n';
+    });
+    /// Generate annotation blocks and add them to the blockly workspace
+    var workspace = Blockly.getMainWorkspace();
+    definitions.forEach(function(d, i) {
+        var allBlocks = workspace.getAllBlocks();
+        var block = workspace.newBlock(d.type);
+        if (d.type === "accessibility_actions") {
+            block.setFieldValue(d.variable, 'ACCESSIBLE');
+        } else {
+            block.setFieldValue(d.variable, 'VAR');
+        }
+        block.setFieldValue(d.action, 'MODE')
+        block.initSvg();
+        block.render();
+        if (allBlocks.length > 0) {
+            var prevBlock = allBlocks[allBlocks.length - 1];
+            var nextConn = prevBlock.nextConnection;
+            var prevConn = block.previousConnection;
+            if (nextConn && prevConn) {
+                prevConn.connect(nextConn);
+            }
+        }
 
-})
-annotationDone = function(id, err, result) {
-    updateAnnotations(id, annotations)
-};
-socket.emit('run', recordingId, annotationDefinition, annotationDone);
+    })
+    annotationDone = function(id, err, result) {
+        updateAnnotations(id, annotations);
+    };
+    socket.emit('run', recordingId, annotationDefinition, annotationDone);
 }
 
+var justDefined = {
+    'accessible': null,
+    'template': null
+};
 
-inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
+inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
     if (!annotations || annotations.length === 0) {
         annotations = [];
         //dataServices = dummyDataService;
@@ -534,15 +543,15 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
     var listOfLines = [];
     var autoplay = false;
     var settings = {
-        autoplay: false
-        , debug: false
-        , src: inspectorWidgetVideoPath(recordingId, recordingPath), //controlBarClassName : "fr.ina.amalia.player.plugins.InspectorWidgetControlBarPlugin",
+        autoplay: false,
+        debug: false,
+        src: inspectorWidgetVideoPath(recordingId, recordingPath), //controlBarClassName : "fr.ina.amalia.player.plugins.InspectorWidgetControlBarPlugin",
         controlBar: {
             sticky: true
-        }
-        , plugins: {
-            dataServices: dataServices
-            , list: [
+        },
+        plugins: {
+            dataServices: dataServices,
+            list: [
                 /*{
                     'className' : 'fr.ina.amalia.player.plugins.OverlayPlugin',
                     'metadataId' : 'ColorDropper-overlays',
@@ -557,31 +566,30 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
                     }
                 },*/
                 {
-                    'className': 'fr.ina.amalia.player.plugins.InspectorWidgetPlugin'
-                    , 'metadataId': 'InspectorWidget'
-                    , 'debug': false
-                    , 'parameters': {
-                        editable: true
-                        , style: {
-                            'fill': '#7b3294'
-                            , 'strokeWidth': 4
-                            , 'stroke': '#7b3294'
-                            , 'fillOpacity': 0
-                            , 'strokeDasharray': '-'
+                    'className': 'fr.ina.amalia.player.plugins.InspectorWidgetPlugin',
+                    'metadataId': 'InspectorWidget',
+                    'debug': false,
+                    'parameters': {
+                        editable: true,
+                        style: {
+                            'fill': '#7b3294',
+                            'strokeWidth': 4,
+                            'stroke': '#7b3294',
+                            'fillOpacity': 0,
+                            'strokeDasharray': '-'
                         }
                     }
-                }
-                , {
-                    'className': 'fr.ina.amalia.player.plugins.TimelinePlugin'
-                    , 'container': '#timeline'
-                    , 'parameters': {
-                        editingMode: true
-                        , timeaxe: true
-                        , timecursor: true
-                        , timeaxeExpandable: true
-                        , displayLines: listOfLines.length
-                        , resizable: false
-                        , lineDisplayMode: fr.ina.amalia.player.plugins.PluginBaseMultiBlocks.METADATA_DISPLAY_TYPE.STATIC, //STATIC//STATIC_DYNAMIC//DYNAMIC
+                }, {
+                    'className': 'fr.ina.amalia.player.plugins.TimelinePlugin',
+                    'container': '#timeline',
+                    'parameters': {
+                        editingMode: true,
+                        timeaxe: true,
+                        timecursor: true,
+                        timeaxeExpandable: true,
+                        displayLines: listOfLines.length,
+                        resizable: false,
+                        lineDisplayMode: fr.ina.amalia.player.plugins.PluginBaseMultiBlocks.METADATA_DISPLAY_TYPE.STATIC, //STATIC//STATIC_DYNAMIC//DYNAMIC
                         listOfLines: listOfLines
                     }
                 }
@@ -593,177 +601,315 @@ inspectorWidgetInit = function (recordingId, recordingPath, annotations) {
     resizePlayerHeight($('#window').height() - $("#timeline").height());
     f.on(fr.ina.amalia.player.PlayerEventType.STARTED, {
         self: f
-    }, function () {
+    }, function() {
         inspectorWidgetAddAnnotations(recordingId, recordingPath, annotations)
 
         optimizePlayerHeight();
 
+        inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+        if (!inspectorWidgetPlugin) {
+            console.log('Could not access amalia.js InspectorWidget plugin');
+            return;
+        }
+
+        inspectorWidgetPlugin.axAvailable = false;
+
         inputEventsAvailable = function(err, files) {
             if (err) {
                 alert('No accessibility information available')
-                return;
+            } else {
+                var definitions = [{
+                    'variable': 'Words',
+                    'action': 'getWords',
+                    'type': 'input_events_actions'
+                }, {
+                    'variable': 'PointerClicks',
+                    'action': 'getPointerClicks',
+                    'type': 'input_events_actions'
+                }, {
+                    'variable': 'KeysTyped',
+                    'action': 'getKeysTyped',
+                    'type': 'input_events_actions'
+                }, {
+                    'variable': 'ModifierKeysPressed',
+                    'action': 'getModifierKeysPressed',
+                    'type': 'input_events_actions'
+                }];
+                loadBasicAnnotations(recordingId, definitions);
             }
-            else {
-              var definitions = [
-                  {
-                      'variable': 'Words'
-                      , 'action': 'getWords'
-                      , 'type' : 'input_events_actions'
-                  }
-                  , {
-                      'variable': 'PointerClicks'
-                      , 'action': 'getPointerClicks'
-                      , 'type' : 'input_events_actions'
-                  }
-                  , {
-                      'variable': 'KeysTyped'
-                      , 'action': 'getKeysTyped'
-                      , 'type' : 'input_events_actions'
-                  }
-                  , {
-                      'variable': 'ModifierKeysPressed'
-                      , 'action': 'getModifierKeysPressed'
-                      , 'type' : 'input_events_actions'
-                  }
-              ];
-              loadBasicAnnotations(recordingId,definitions);
-            }
+
+            axAvailable = function(err, files) {
+                if (err) {
+                    alert('No accessibility information available')
+                    return;
+                } else {
+                    /// Accessibility on mouse hover
+                    d3.select("#accessibilityViewer").append("svg").attr("id", "accessibilityViewerSvg").attr("width", accessibilityTreeWidth + accessibilityTreeMargin.left + accessibilityTreeMargin.right).attr("height", accessibilityTreeHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom).append("g").attr("id", "accessibilityViewerCanvas").attr("transform", "translate(" + accessibilityTreeMargin.left + "," + accessibilityTreeMargin.top + ")");
+                    resizeAccessibilityViewerWidth(accessibilityTreeWidth);
+
+                    inspectorWidgetPlugin.axAvailable = true;
+
+                    /// Try to load basic accessibility annotations
+                    var definitions = [{
+                        'variable': 'FocusApplication',
+                        'action': 'getFocusApplication',
+                        'type': 'accessibility_actions'
+                    }, {
+                        'variable': 'FocusWindow',
+                        'action': 'getFocusWindow',
+                        'type': 'accessibility_actions'
+                    }, {
+                        'variable': 'PointedWidget',
+                        'action': 'getPointedWidget',
+                        'type': 'accessibility_actions'
+                    }, {
+                        'variable': 'WorkspaceSnapshot',
+                        'action': 'getWorkspaceSnapshot',
+                        'type': 'accessibility_actions'
+                    }];
+
+                    loadBasicAnnotations(recordingId, definitions);
+                }
+            };
+            socket.emit('accessibilityAvailable', recordingId, axAvailable);
+
+
         }
         socket.emit('inputEventsAvailable', recordingId, inputEventsAvailable);
 
-        axAvailable = function(err, files) {
-            if (err) {
-                alert('No accessibility information available')
-                return;
+        onMouseDown = function(event) {
+            event.data.self.mouseMoved = false;
+            event.data.self.mouseDown = true;
+            event.data.self.mouseDownJustTriggered = true;
+        };
+
+        onMouseMove = function(event) {
+            if (event.data.self.mouseDownJustTriggered === true) {
+                event.data.self.mouseDownJustTriggered = false;
+                var startX = Math.max(0, event.offsetX); // + ((event.data.self.container.height() - 45 - videoSize.h) / 2));
+                var startY = Math.max(0, event.offsetY); // + ((event.data.self.container.height() - videoSize.h) / 2));
+                event.data.self.drawingHandler.doDraw.startX = startX;
+                event.data.self.drawingHandler.doDraw.startY = startY;
+                event.data.self.drawingHandler.doDraw.endX = startX;
+                event.data.self.drawingHandler.doDraw.endY = startY;
+                event.data.self.drawingHandler.attr('width', 0);
+                event.data.self.drawingHandler.attr('height', 0);
+                event.data.self.drawingHandler.attr('x', event.data.self.drawingHandler.doDraw.startX);
+                event.data.self.drawingHandler.attr('y', event.data.self.drawingHandler.doDraw.startY);
             }
-            else {
-                /// Accessibility on mouse hover
-                inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
-                if (!inspectorWidgetPlugin) {
-                    console.log('Could not access amalia.js InspectorWidget plugin');
-                    return;
-                }
-                d3.select("#accessibilityViewer").append("svg").attr("id", "accessibilityViewerSvg").attr("width", accessibilityTreeWidth + accessibilityTreeMargin.left + accessibilityTreeMargin.right).attr("height", accessibilityTreeHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom).append("g").attr("id", "accessibilityViewerCanvas").attr("transform", "translate(" + accessibilityTreeMargin.left + "," + accessibilityTreeMargin.top + ")");
-                resizeAccessibilityViewerWidth(accessibilityTreeWidth);
+            event.data.self.mouseMoved = true;
+            var videoSize = event.data.self.getVideoSize();
+            var player = event.data.self.mediaPlayer.getMediaPlayer();
+            var l = (player.width() - videoSize.w) / 2;
+            var t = (player.height() - videoSize.h) / 2;
+            var w = videoSize.w;
+            var h = videoSize.h;
+            var rect = event.currentTarget.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+            /// Handle accessibility on hover
+            if (event.data.self.mouseDown === false && x - l > 0 && y - t > 0 && x - l < w && y - t < h && event.data.self.doDraw === false && event.ctrlKey === false) {
+                var time = event.data.self.mediaPlayer.getCurrentTime();
 
-                onMouseMove = function(event) {
+                function accessibilityHoverReceived(id, err, x, y, w, h, axTreeParents, axTreeChildren) {
+                    x = parseFloat(x);
+                    y = parseFloat(y);
+                    w = parseFloat(w);
+                    h = parseFloat(h);
+                    if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
+                        //console.log('NaN values in accessibility hover');
+                        return;
+                    }
                     var videoSize = event.data.self.getVideoSize();
-                    var player = event.data.self.mediaPlayer.getMediaPlayer();
-                    var l = (player.width() - videoSize.w) / 2;
-                    var t = (player.height() - videoSize.h) / 2;
-                    var w = videoSize.w;
-                    var h = videoSize.h;
-                    var rect = event.currentTarget.getBoundingClientRect();
-                    var x = event.clientX - rect.left;
-                    var y = event.clientY - rect.top;
-                    /// Handle accessibility on hover
-                    if (x - l > 0 && y - t > 0 && x - l < w && y - t < h && inspectorWidgetPlugin.doDraw === false && event.ctrlKey === false) {
-                        var time = event.data.self.mediaPlayer.getCurrentTime();
-
-                        function accessibilityHoverReceived(id, err, x, y, w, h, axTreeParents, axTreeChildren) {
-							/*if(err){
-								console.log('Error with receiving accessibility hover information:',err);
-								return;
-							};*/
-                            x = parseFloat(x);
-                            y = parseFloat(y);
-                            w = parseFloat(w);
-                            h = parseFloat(h);
-							if(isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)){
-								console.log('NaN values in accessibility hover');
-								return;
-							}
-                            inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
-                            if (!inspectorWidgetPlugin) {
-                                console.log('Could not access amalia.js InspectorWidget plugin');
-                                return;
-                            }
-                            var videoSize = inspectorWidgetPlugin.getVideoSize();
-                            inspectorWidgetPlugin.drawingHandler.show();
-                            inspectorWidgetPlugin.drawingHandler.toFront();
-                            inspectorWidgetPlugin.drawingHandler.doDraw.startX = x * videoSize.w;
-                            inspectorWidgetPlugin.drawingHandler.doDraw.startY = y * videoSize.h;
-                            inspectorWidgetPlugin.drawingHandler.doDraw.endX = (x + w) * videoSize.w;
-                            inspectorWidgetPlugin.drawingHandler.doDraw.endY = (y + h) * videoSize.h;
-                            inspectorWidgetPlugin.drawingHandler.attr('width', w * videoSize.w);
-                            inspectorWidgetPlugin.drawingHandler.attr('height', h * videoSize.h);
-                            inspectorWidgetPlugin.drawingHandler.attr('x', inspectorWidgetPlugin.drawingHandler.doDraw.startX);
-                            inspectorWidgetPlugin.drawingHandler.attr('y', inspectorWidgetPlugin.drawingHandler.doDraw.startY);
-                            inspectorWidgetPlugin.drawingHandler.attr('fill', '#3cf');
-                            inspectorWidgetPlugin.drawingHandler.attr('fill-opacity', '0.3');
-                            //console.log(axTree);
-                            if (axTreeChildren === "empty" || axTreeChildren === "identical") {
-                                console.log(axTreeChildren)
-                            }
-                            if (axTreeParents !== "empty" && axTreeParents !== "identical") {
-                                var domParser = new DOMParser();
-                                console.log('new parents')
-                                var axDOM = domParser.parseFromString(axTreeParents, "text/xml");
-                                axJSON = xmlToJson(axDOM.firstChild);
-                                axJSON.x0 = 0;
-                                axJSON.y0 = 0;
-                                updateAccessibilityTree(root = axJSON);
-                            }
-                        }
-                        socket.emit('accessibilityHover', recordingId, time, (x - l) / w, (y - t) / h, accessibilityHoverReceived);
+                    event.data.self.drawingHandler.show();
+                    event.data.self.drawingHandler.toFront();
+                    event.data.self.drawingHandler.doDraw.startX = x * videoSize.w;
+                    event.data.self.drawingHandler.doDraw.startY = y * videoSize.h;
+                    event.data.self.drawingHandler.doDraw.endX = (x + w) * videoSize.w;
+                    event.data.self.drawingHandler.doDraw.endY = (y + h) * videoSize.h;
+                    event.data.self.drawingHandler.attr('width', w * videoSize.w);
+                    event.data.self.drawingHandler.attr('height', h * videoSize.h);
+                    event.data.self.drawingHandler.attr('x', event.data.self.drawingHandler.doDraw.startX);
+                    event.data.self.drawingHandler.attr('y', event.data.self.drawingHandler.doDraw.startY);
+                    event.data.self.drawingHandler.attr('stroke', '#3cf');
+                    event.data.self.drawingHandler.attr('fill', '#3cf');
+                    event.data.self.drawingHandler.attr('fill-opacity', '0.3');
+                    //console.log(axTree);
+                    if (axTreeChildren === "empty" || axTreeChildren === "identical") {
+                        //console.log(axTreeChildren)
                     }
-                    /// Handle template annotation
-                    if (event.data.self.drawing === true) {
-                        var endX = Math.max(0, event.offsetX);
-                        var endY = Math.max(0, event.offsetY);
-                        var width = Math.max(0, endX - event.data.self.drawingHandler.doDraw.startX);
-                        var height = Math.max(0, endY - event.data.self.drawingHandler.doDraw.startY);
-                        event.data.self.drawingHandler.doDraw.endX = endX;
-                        event.data.self.drawingHandler.doDraw.endY = endY;
-                        event.data.self.drawingHandler.attr('width', width);
-                        event.data.self.drawingHandler.attr('height', height);
+                    if (axTreeParents !== "empty" && axTreeParents !== "identical") {
+                        var domParser = new DOMParser();
+                        //console.log('new parents')
+                        var axDOM = domParser.parseFromString(axTreeParents, "text/xml");
+                        axJSON = xmlToJson(axDOM.firstChild);
+                        axJSON.x0 = 0;
+                        axJSON.y0 = 0;
+                        updateAccessibilityTree(root = axJSON);
                     }
-                };
-                inspectorWidgetPlugin.container.on('mousemove', {
-                    self: inspectorWidgetPlugin
-                }, onMouseMove);
-                inspectorWidgetPlugin.container.on('mouseleave', {
-                    self: inspectorWidgetPlugin
-                }, function (event) {
-                    if (event.ctrlKey === false) {
-                        event.data.self.drawingHandler.hide();
-                    }
-                });
-                /// Try to load basic accessibility annotations
-                //var loadAx = confirm('Accessibility information available. Do you want to load it?');
-                //if (loadAx == true) {
-                var definitions = [
-                    {
-                        'variable': 'FocusApplication'
-                        , 'action': 'getFocusApplication'
-                        , 'type' : 'accessibility_actions'
-                    }
-                    , {
-                        'variable': 'FocusWindow'
-                        , 'action': 'getFocusWindow'
-                        , 'type' : 'accessibility_actions'
-                    }
-                    , {
-                        'variable': 'PointedWidget'
-                        , 'action': 'getPointedWidget'
-                        , 'type' : 'accessibility_actions'
-                    }
-                    , {
-                        'variable': 'WorkspaceSnapshot'
-                        , 'action': 'getWorkspaceSnapshot'
-                        , 'type' : 'accessibility_actions'
-                    }
-                ];
-
-                loadBasicAnnotations(recordingId,definitions);
+                }
+                if (event.data.self.axAvailable === true) {
+                    socket.emit('accessibilityHover', recordingId, time, (x - l) / w, (y - t) / h, accessibilityHoverReceived);
+                }
+            }
+            /// Handle template annotation
+            if (event.data.self.mouseDown === true) {
+                event.data.self.drawingHandler.show();
+                event.data.self.drawingHandler.toFront();
+                var endX = event.offsetX;
+                var endY = event.offsetY;
+                event.data.self.drawingHandler.attr('x', Math.min(event.data.self.drawingHandler.doDraw.startX, event.data.self.drawingHandler.doDraw.endX));
+                event.data.self.drawingHandler.attr('y', Math.min(event.data.self.drawingHandler.doDraw.startY, event.data.self.drawingHandler.doDraw.endY));
+                var width = Math.abs(endX - event.data.self.drawingHandler.doDraw.startX);
+                var height = Math.abs(endY - event.data.self.drawingHandler.doDraw.startY);
+                event.data.self.drawingHandler.attr('stroke', 'rgb(112,73,132)');
+                event.data.self.drawingHandler.attr('fill', 'rgb(112,73,132)');
+                event.data.self.drawingHandler.attr('fill-opacity', '0.3');
+                event.data.self.drawingHandler.doDraw.endX = endX;
+                event.data.self.drawingHandler.doDraw.endY = endY;
+                event.data.self.drawingHandler.attr('width', width);
+                event.data.self.drawingHandler.attr('height', height);
             }
         };
-        socket.emit('accessibilityAvailable', recordingId, axAvailable);
 
-        //}
+        onMouseUp = function(event) {
+            event.data.self.mouseDownJustTriggered = false;
+            //if (event.data.self.drawing === true) {
+            event.data.self.drawing = false;
+            event.data.self.drawingHandler.hide();
+            var w = Math.max(0, event.data.self.drawingHandler.doDraw.endX - event.data.self.drawingHandler.doDraw.startX);
+            var h = Math.max(0, event.data.self.drawingHandler.doDraw.endY - event.data.self.drawingHandler.doDraw.startY);
+            var _shape = event.data.self.drawShape('rectangle', event.data.self.drawingHandler.doDraw.startX, event.data.self.drawingHandler.doDraw.startY, w, h);
+
+            function addAnnotation(type) {
+                var blockType = type;
+                var valueType = type.toString().toUpperCase();
+                var x = parseFloat(event.data.self.drawingHandler.doDraw.startX) / parseFloat(event.data.self.canvas.width);
+                var y = parseFloat(event.data.self.drawingHandler.doDraw.startY) / parseFloat(event.data.self.canvas.height);
+                var rx = w / parseFloat(event.data.self.canvas.width);
+                var ry = h / parseFloat(event.data.self.canvas.height);
+                var time = parseFloat(event.data.self.mediaPlayer.getCurrentTime());
+                var src = event.data.self.mediaPlayer.settings.src;
+                tree = src.toString().split('/')
+                var id = tree.length > 1 ? tree[tree.length - 2] : null;
+                var name = blockType + "-" + id + "-" + time + "-" + x + "-" + y + "-" + rx + "-" + ry;
+                var rightcode = "=template(" + x + "," + y + "," + rx + "," + ry + ",'" + id + "'," + time + ")";
+                var extractCode = name + rightcode;
+
+                function extracted(src, err, result) {
+                    if (err) {
+                        event.data.self.clearCanvas();
+                    }
+                    /// Wrong id!
+                    tree = src.toString().split('/')
+                    var id = tree.length > 1 ? tree[tree.length - 2] : null;
+
+                    vex.dialog.prompt({
+                        unsafeMessage: 'You clicked on this ' + blockType + ' region:\
+                                <br/><img style="width:100%" src="data/' + id + '/' + name + '.png"/>\
+                                <br/>' + ((justDefined[type] === null) ? 'Please give it a name if you want to annotate it:' : 'Annotate it under name ' + justDefined[type].getFieldValue(valueType) + '?'),
+                        placeholder: justDefined[type] ? justDefined[type].getFieldValue(valueType) : '',
+                        callback: function(value) {
+                            event.data.self.clearCanvas();
+                            if (value || justDefined[type] !== null) {
+                                var workspace = Blockly.getMainWorkspace();
+                                var allBlocks = workspace.getAllBlocks();
+                                var block = (justDefined[type] === null) ? workspace.newBlock(blockType + 's_set') : justDefined[type];
+
+                                block.setFieldValue(x, 'X');
+                                block.setFieldValue(y, 'Y');
+                                block.setFieldValue(rx, 'W');
+                                block.setFieldValue(ry, 'H');
+                                block.setFieldValue(id, 'VIDEO');
+                                block.setFieldValue(time, 'TIME');
+                                if (justDefined[type] === null) {
+                                    block.setFieldValue(value, valueType)
+                                    block.initSvg();
+                                    block.render();
+                                    workspace.cleanUp();
+                                } else {
+                                    value = justDefined[type].getFieldValue(valueType);
+                                }
+                                var renameCode = value + rightcode;
+
+                                function renamed(src, err, result) {
+                                    if (err) {
+                                        console.log('Error', err);
+                                    } else {
+                                        var url = '/data/' + id + '/' + value + '.png';
+                                        block.thumbnailMutator_.changeSrc(url);
+                                        justDefined[type] = null
+                                    }
+                                }
+                                socket.emit('run', id, renameCode, renamed);
+                            }
+                        }
+                    })
+                }
+                socket.emit('run', id, extractCode, extracted);
+            }
+
+            if (_shape !== null) {
+                var _shapePos = {
+                    c: {
+                        x: parseFloat((event.data.self.drawingHandler.doDraw.startX + event.data.self.drawingHandler.doDraw.endX) / 2 / event.data.self.canvas.width),
+                        y: parseFloat((event.data.self.drawingHandler.doDraw.startY + event.data.self.drawingHandler.doDraw.endY) / 2 / event.data.self.canvas.height)
+                    },
+                    rx: parseFloat((w / event.data.self.canvas.width) / 2),
+                    ry: parseFloat((h / event.data.self.canvas.height) / 2),
+                    o: 0,
+                    t: event.data.self.getSelectedShape()
+                };
+                event.data.self.createDataShape(_shape, _shapePos);
+
+                var _lastDrawnShape = {
+                    x: parseFloat( /*(*/ event.data.self.drawingHandler.doDraw.startX /* + event.data.self.drawingHandler.doDraw.endX) / 2*/ / event.data.self.canvas.width),
+                    y: parseFloat( /*(*/ event.data.self.drawingHandler.doDraw.startY /* + event.data.self.drawingHandler.doDraw.endY) / 2*/ / event.data.self.canvas.height),
+                    rx: parseFloat((w / event.data.self.canvas.width) /*/ 2*/ ),
+                    ry: parseFloat((h / event.data.self.canvas.height) /*/ 2*/ ),
+                    time: parseFloat(event.data.self.mediaPlayer.getCurrentTime()),
+                    src: event.data.self.mediaPlayer.settings.src,
+                };
+                event.data.self.lastDrawnShape = _lastDrawnShape;
+
+                if (event.data.self.axAvailable === true && !isNaN(w) && !isNaN(h) && event.data.self.mouseDown === true && event.data.self.mouseMoved === false) {
+                    addAnnotation('accessible')
+                }
+            }
+
+            if (event.data.self.mouseDown === true && event.data.self.mouseMoved === true) {
+                addAnnotation('template')
+                event.data.self.clearCanvas();
+            }
+
+            event.data.self.mouseDown = false;
+            event.data.self.doDraw = false;
+            //}
+        };
+
+        inspectorWidgetPlugin.mouseMoved = false;
+        inspectorWidgetPlugin.mouseDown = false;
+        inspectorWidgetPlugin.mouseDownJustTriggered = false;
+
+        inspectorWidgetPlugin.container.on('mousedown', {
+            self: inspectorWidgetPlugin
+        }, onMouseDown);
+        inspectorWidgetPlugin.container.on('mouseup', {
+            self: inspectorWidgetPlugin
+        }, onMouseUp);
+        inspectorWidgetPlugin.container.on('mousemove', {
+            self: inspectorWidgetPlugin
+        }, onMouseMove);
+        inspectorWidgetPlugin.container.on('mouseleave', {
+            self: inspectorWidgetPlugin
+        }, function(event) {
+            if (event.ctrlKey === false) {
+                event.data.self.drawingHandler.hide();
+            }
+        });
     });
 };
-inspectorWidgetFindPlugin = function (pluginClass) {
+inspectorWidgetFindPlugin = function(pluginClass) {
     var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
     if (!player) {
         console.log('Could not access amalia.js player');
@@ -779,34 +925,28 @@ inspectorWidgetFindPlugin = function (pluginClass) {
     }
     return null;
 };
-inspectorWidgetRemoveAnnotations = function (recordingId, recordingPath, annotations) {
+inspectorWidgetRemoveAnnotations = function(recordingId, recordingPath, annotations) {
     var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
     if (!timelinePlugin) {
         console.log('Could not access amalia.js timeline plugin');
         return;
     }
-    var fields = [timelinePlugin.listOfComponents
-                  , timelinePlugin.settingsListOfComponents
-                  , timelinePlugin.settings.listOfLines
-                  , timelinePlugin.managedMetadataIds
-                  , timelinePlugin.notManagedMetadataIds
-                 ];
+    var fields = [timelinePlugin.listOfComponents, timelinePlugin.settingsListOfComponents, timelinePlugin.settings.listOfLines, timelinePlugin.managedMetadataIds, timelinePlugin.notManagedMetadataIds];
 
     function removeMetadataId(fields, metadataId) {
-        fields.forEach(function (field) {
+        fields.forEach(function(field) {
             //console.log('field',field);
-            field.reverse().forEach(function (d, i) {
+            field.reverse().forEach(function(d, i) {
                 //console.log('field',d);
-                if (typeof (d) === 'string' && d === metadataId) {
+                if (typeof(d) === 'string' && d === metadataId) {
                     field.splice(i, 1)
-                }
-                else if (typeof (d) === 'object' && 'metadataId' in d && d.metadataId === metadataId) {
+                } else if (typeof(d) === 'object' && 'metadataId' in d && d.metadataId === metadataId) {
                     field.splice(i, 1)
                 }
             })
         })
     }
-    annotations.forEach(function (annotation) {
+    annotations.forEach(function(annotation) {
         var deleteMetadataId = annotation.name + '-segments';
         var managedMetadataIds = timelinePlugin.managedMetadataIds.length;
         if (timelinePlugin.isManagedMetadataId(deleteMetadataId) !== -1) {
@@ -821,7 +961,7 @@ inspectorWidgetRemoveAnnotations = function (recordingId, recordingPath, annotat
     });
     timelinePlugin.updateComponentsLineHeight();
 };
-inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotations) {
+inspectorWidgetAddAnnotations = function(recordingId, recordingPath, annotations) {
     var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
     if (!player) {
         console.log('Could not access amalia.js player');
@@ -832,13 +972,12 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
         console.log('Could not access amalia.js timeline plugin');
         return;
     }
-    console.log('passed')
+
     var dataServices = inspectorWidgetListDataServices(recordingId, recordingPath, annotations);
-    annotations.forEach(function (d) {
+    annotations.forEach(function(d) {
         var metadataId = d.name + '-segments';
         if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
             var listOfLines = inspectorWidgetListLines([d]);
-            console.log('listOfLines',listOfLines)
             //timelinePlugin.createComponentsWithList(listOfLines)
             timelinePlugin.displayLinesNb += 1;
             timelinePlugin.settings.displayLines += 1;
@@ -849,35 +988,35 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
     function loadData(url) {
         var self = this;
         $.ajax({
-            type: 'GET'
-            , url: url
-            , timeout: 120000
-            , data: {}
-            , dataType: 'json'
-            , success: function (data, textStatus) {
+            type: 'GET',
+            url: url,
+            timeout: 120000,
+            data: {},
+            dataType: 'json',
+            success: function(data, textStatus) {
                 //console.log('success')
                 data = parser.processParserData(data);
                 var viewControl = data.viewControl;
                 var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
                 player.player.updateBlockMetadata(data.id, {
-                    id: data.id
-                    , label: data.label
-                    , type: data.hasOwnProperty('type') ? data.type : 'default'
-                    , author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : ''
-                    , color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf'
-                    , shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                    id: data.id,
+                    label: data.label,
+                    type: data.hasOwnProperty('type') ? data.type : 'default',
+                    author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : '',
+                    color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf',
+                    shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
                 }, null);
                 //console.log(data.list)
                 player.player.replaceAllMetadataById(data.id, data.list);
                 optimizePlayerHeight();
-            }
-            , error: function (data, textStatus) {
+            },
+            error: function(data, textStatus) {
                 console.log(url, 'error', data, textStatus)
             }
         });
     }
     // pluginManager.loadData(dataServices);
-    annotations.forEach(function (d, i) {
+    annotations.forEach(function(d, i) {
         if (d.segment) {
             loadData(inspectorWidgetAnnotationPath(recordingId, recordingPath, d, 'segment'))
         }
@@ -887,20 +1026,20 @@ inspectorWidgetAddAnnotations = function (recordingId, recordingPath, annotation
     });
     timelinePlugin.updateComponentsLineHeight();
 };
-resizePlayerWidth = function (width) {
+resizePlayerWidth = function(width) {
     $('#playercode').width($(document).width());
     $('#code').width($(document).width() - width);
     $('#blockly').width($(document).width() - width - $('#accessibilityViewer').width() - 10);
     var workspace = Blockly.getMainWorkspace();
     Blockly.svgResize(workspace);
 }
-resizeAccessibilityViewerWidth = function (width) {
+resizeAccessibilityViewerWidth = function(width) {
     $('#accessibilityViewer').width(width);
     $('#blockly').width($(document).width() - $('#player').width() - width - 10);
     var workspace = Blockly.getMainWorkspace();
     Blockly.svgResize(workspace);
 }
-resizePlayerHeight = function (height) {
+resizePlayerHeight = function(height) {
     //console.log(event.clientX,event.clientY,y);
     $('#playercode').height(height);
     $('#player').height(height);
@@ -913,7 +1052,7 @@ resizePlayerHeight = function (height) {
     $('.player').height(height - $('#recording').height() - barsHeight);
     var inspectorWidgetPlugins = $(".ajs-plugin.plugin-inspectorwidget");
     inspectorWidgetPlugins = inspectorWidgetPlugins.add($(".ajs-plugin.plugin-overlay"));
-    inspectorWidgetPlugins.each(function (i, plugin) {
+    inspectorWidgetPlugins.each(function(i, plugin) {
         plugin.style.top = 0 /*$('#recording').height()*/ + 'px';
         plugin.style.height = $('.player').height() + 'px';
     })
@@ -931,7 +1070,7 @@ resizePlayerHeight = function (height) {
     }
     inspectorWidgetPlugin.updateCanvasPosition();
 }
-optimizePlayerHeight = function () {
+optimizePlayerHeight = function() {
     resizePlayerHeight($('#window').height() - $("#timeline").height());
 }
 
@@ -959,21 +1098,20 @@ function changeRecording(recordingId) {
         if (err) {
             console.log('annotations Error', err);
             return;
-        }
-        else {
+        } else {
             $("#player").resizable({
-                handles: 'e'
-                , ghost: false
-            , });
-            $('#player').resize(function (event, ui) {
+                handles: 'e',
+                ghost: false,
+            });
+            $('#player').resize(function(event, ui) {
                 var x = event.clientX;
                 resizePlayerWidth(x);
             })
             $("#playercode").resizable({
-                handles: 's'
-                , ghost: false
-            , });
-            $('#playercode').resize(function (event, ui) {
+                handles: 's',
+                ghost: false,
+            });
+            $('#playercode').resize(function(event, ui) {
                 var y = ui.size.height;
                 var windowHeight = $('#window').height();
                 // from timelinePlugin updateComponentsLineHeight()
@@ -986,25 +1124,25 @@ function changeRecording(recordingId) {
                 element.css("height", windowHeight - y);
             })
             $("#accessibilityViewer").resizable({
-                handles: 'e'
-                , ghost: false
-            , });
-            $('#accessibilityViewer').resize(function (event, ui) {
+                handles: 'e',
+                ghost: false,
+            });
+            $('#accessibilityViewer').resize(function(event, ui) {
                 var x = event.clientX;
                 var accessibilityViewerWidth = x - $('#player').width();
                 resizeAccessibilityViewerWidth(accessibilityViewerWidth);
             })
-            window.addEventListener('resize', function (event) {
+            window.addEventListener('resize', function(event) {
                 optimizePlayerHeight();
             });
             var blocklyDiv = document.getElementById('blocklyDiv');
             if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
                 var workspace = Blockly.inject(blocklyDiv, {
-                    media: 'bower_components/blockly/media/'
-                    , toolbox: document.getElementById('toolbox')
+                    media: 'bower_components/blockly/media/',
+                    toolbox: document.getElementById('toolbox')
                 });
                 /* Enable this line to load a default annotation program */
-                Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),workspace);
+                Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'), workspace);
             }
             var blocklyControls = document.getElementById('blocklyControlsDiv');
             createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
@@ -1014,17 +1152,17 @@ function changeRecording(recordingId) {
             createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
             createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
             var annotations = [];
-            files.forEach(function (file) {
+            files.forEach(function(file) {
                 var stem = file.split('/').pop().split('.').reverse().pop();
                 var hyphens = stem.split('-');
                 var type = hyphens.pop();
                 var label = hyphens.pop();
                 var annotation = {
-                    name: label
-                    , segment: true
-                    , overlay: false
-                    , event: false
-                    , source: 'computer_vision'
+                    name: label,
+                    segment: true,
+                    overlay: false,
+                    event: false,
+                    source: 'computer_vision'
                 }
                 annotations = annotations.concat(annotation);
             });
@@ -1035,7 +1173,7 @@ function changeRecording(recordingId) {
     socket.emit('annotations', recordingId, annotationsReceived);
 }
 var recordings = document.getElementById('recordings');
-recordings.onchange = function () {
+recordings.onchange = function() {
     changeRecording(this.value);
 };
 
@@ -1054,13 +1192,12 @@ processStatus = function() {
     function done(id, err, result, phase, progress) {
         if (err) {
             console.log('Error', err);
-            alert('Error: '+err)
+            alert('Error: ' + err)
             //io.emit('error', err);
             return;
-        }
-        else {
+        } else {
             console.log('Result', result);
-            alert('Result: '+result)
+            alert('Result: ' + result)
             //io.emit('result', result);
             return;
         }
@@ -1072,7 +1209,7 @@ processStatus = function() {
     socket.emit('status', recordingId, done);
 }
 
-runCode = function () {
+runCode = function() {
     var workspace = Blockly.getMainWorkspace();
     var recordings = document.getElementById('recordings');
     var recordingId = recordings.value;
@@ -1131,26 +1268,25 @@ runCode = function () {
     timelinePlugin.updateComponentsLineHeight();
     optimizePlayerHeight();
 
-    runDone = function (id, err, result) {
+    runDone = function(id, err, result) {
         clearInterval(timer);
         $('#runCode')[0].disabled = false;
         $('#abort')[0].disabled = true;
         if (err) {
             console.log('Error', err);
             return;
-        }
-        else {
+        } else {
             updateAnnotations(recordingId, []);
             return;
         }
     }
     socket.emit('run', recordingId, code, runDone);
-    timer = setInterval(function () {
-            updateAnnotations(recordingId, []);
-        }, 250) // milliseconds
+    timer = setInterval(function() {
+        updateAnnotations(recordingId, []);
+    }, 250) // milliseconds
 }
 
-saveCode = function () {
+saveCode = function() {
     // Generate JavaScript code and export it.
     var workspace = Blockly.getMainWorkspace();
     var xml = Blockly.Xml.workspaceToDom(workspace);
@@ -1174,49 +1310,33 @@ abort = function() {
     socket.emit('abort', recordingId);
 }
 
-var templateDefinedCallback = function(caller,msg) {
-    var block = caller.sourceBlock_;
-        function done (id,err, result) {
-            //console.log('from id',id);
-            if (err) {
-                console.log('Error',err);
-            }
-            else{
-                var id = block.getFieldValue('VIDEO');
-                var template = block.getFieldValue('TEMPLATE');
-                var url = '/data/' + id + '/' + template + '.png';
-                block.thumbnailMutator_.changeSrc(url);
-            }
-            var inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
-            if(inspectorWidgetPlugin){
-              inspectorWidgetPlugin.clearCanvas();
-            }
-        }
-    if( msg !== null && 'rx' in msg){
-        // Update block values
-        var recordingFullPath = msg.src;
-        var recordingId = recordingFullPath.split('\\').pop().split('/').pop().split('.').reverse().pop();
-        block.setFieldValue(msg.x,'X');
-        block.setFieldValue(msg.y,'Y');
-        block.setFieldValue(msg.rx,'W');
-        block.setFieldValue(msg.ry,'H');
-        block.setFieldValue(recordingId,'VIDEO');
-        block.setFieldValue(msg.time,'TIME');
-
-        // Submit block code to InspectorWidget to get the template image
-        var workspace = Blockly.getMainWorkspace();
-        Blockly.JavaScript.init(workspace);
-        var code = Blockly.JavaScript.blockToCode(block);
-        //var socket = io();
-        socket.emit('run',recordingId,code,done);
+// Overload the Blockly defined template callback
+Blockly.FieldTemplate.prototype.defineTemplateCallback = function(caller, name) {
+    /*var inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
+    if (inspectorWidgetPlugin) {
+        inspectorWidgetPlugin.openAddShape(caller, templateDefinedCallback);
     }
+    return;*/
+    confirmCallback = function(value) {
+        console.log(value);
+        if (value === true) {
+            block = caller.sourceBlock_;
+            justDefined['template'] = block;
+        }
+    }
+    Blockly.confirm('Click and move on the video to draw a region you desire to match.', confirmCallback)
+    return;
 }
 
-// Overload the defined template callback
-Blockly.FieldTemplate.prototype.defineTemplateCallback = function(caller,name) {
-  var inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
-  if(inspectorWidgetPlugin){
-    inspectorWidgetPlugin.openAddShape(caller,templateDefinedCallback);
-  }
-  return;
+// Overload the Blockly defined accessible callback
+Blockly.FieldAccessible.prototype.defineAccessibleCallback = function(caller, name) {
+    confirmCallback = function(value) {
+        console.log(value);
+        if (value === true) {
+            block = caller.sourceBlock_;
+            justDefined['accessible'] = block;
+        }
+    }
+    Blockly.confirm('Hover the video. Accessible widgets appear in blue. Click on the one you desire to match.', confirmCallback)
+    return;
 }
