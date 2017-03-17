@@ -777,15 +777,15 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
             //if (event.data.self.drawing === true) {
             event.data.self.drawing = false;
             event.data.self.drawingHandler.hide();
-            var w = Math.max(0, event.data.self.drawingHandler.doDraw.endX - event.data.self.drawingHandler.doDraw.startX);
-            var h = Math.max(0, event.data.self.drawingHandler.doDraw.endY - event.data.self.drawingHandler.doDraw.startY);
+            var w = Math.abs(event.data.self.drawingHandler.doDraw.endX - event.data.self.drawingHandler.doDraw.startX);
+            var h = Math.abs(event.data.self.drawingHandler.doDraw.endY - event.data.self.drawingHandler.doDraw.startY);
             var _shape = event.data.self.drawShape('rectangle', event.data.self.drawingHandler.doDraw.startX, event.data.self.drawingHandler.doDraw.startY, w, h);
 
             function addAnnotation(type) {
                 var blockType = type;
                 var valueType = type.toString().toUpperCase();
-                var x = parseFloat(event.data.self.drawingHandler.doDraw.startX) / parseFloat(event.data.self.canvas.width);
-                var y = parseFloat(event.data.self.drawingHandler.doDraw.startY) / parseFloat(event.data.self.canvas.height);
+                var x = Math.min(event.data.self.drawingHandler.doDraw.startX, event.data.self.drawingHandler.doDraw.endX) / parseFloat(event.data.self.canvas.width);
+                var y = Math.min(event.data.self.drawingHandler.doDraw.startY, event.data.self.drawingHandler.doDraw.endY) / parseFloat(event.data.self.canvas.height);
                 var rx = w / parseFloat(event.data.self.canvas.width);
                 var ry = h / parseFloat(event.data.self.canvas.height);
                 var time = parseFloat(event.data.self.mediaPlayer.getCurrentTime());
