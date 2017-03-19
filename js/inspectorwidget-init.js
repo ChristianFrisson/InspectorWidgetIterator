@@ -570,6 +570,19 @@ loadBasicAnnotations = function(recordingId, definitions) {
     socket.emit('run', recordingId, annotationDefinition, annotationDone);
 }
 
+definitionBlocksOnTop = function(){
+  var workspace = Blockly.getMainWorkspace();
+  workspace.cleanUp();
+  var cursorY = 0;
+  workspace.getAllBlocks().reverse().forEach(function(block){
+    if(block.type === "accessibles_set" || block.type === "templates_set"){
+      cursorY += block.height;
+      block.translate(0, -cursorY);
+    }
+  })
+  workspace.cleanUp();
+}
+
 var justDefined = {
     'accessible': null,
     'template': null
@@ -891,8 +904,23 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                                     blockMatch.setFieldValue(value, valueType);
                                     blockMatch.initSvg();
                                     blockMatch.render();
+                                    var topBlocks = workspace.getTopBlocks();
+                                    if (topBlocks.length > 0) {
+                                        var prevBlock = topBlocks[0];
+                                        var nextConn = prevBlock.nextConnection;
+                                        while(prevBlock.getNextBlock()){
+                                          prevBlock = prevBlock.getNextBlock();
+                                          nextConn = prevBlock.nextConnection;
+                                        }
+                                        var prevConn = blockMatch.previousConnection;
+                                        if (nextConn && prevConn) {
+                                            prevConn.connect(nextConn);
+                                        }
+                                    }
                                     workspace.cleanUp();
                                 }
+
+                                definitionBlocksOnTop();
                             }
                         }
                     })
@@ -1229,6 +1257,7 @@ recordings.onchange = function() {
 };
 
 showCode = function() {
+    definitionBlocksOnTop();
     var workspace = Blockly.getMainWorkspace();
     // Generate JavaScript code and display it.
     Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
@@ -1391,3 +1420,20 @@ Blockly.FieldAccessible.prototype.defineAccessibleCallback = function(caller, na
     Blockly.confirm('Hover the video. Accessible widgets appear in blue. Click on the one you desire to match.', confirmCallback)
     return;
 }
+
+// Overload the workspace clean up function to compress vertical space
+Blockly.WorkspaceSvg.prototype.cleanUp = function() {
+  Blockly.Events.setGroup(true);
+  var topBlocks = this.getTopBlocks(true);
+  var cursorY = 0;
+  for (var i = 0, block; block = topBlocks[i]; i++) {
+    var xy = block.getRelativeToSurfaceXY();
+    block.moveBy(-xy.x, cursorY - xy.y);
+    block.snapToGrid();
+    cursorY = block.getRelativeToSurfaceXY().y +
+        block.getHeightWidth().height;// + Blockly.BlockSvg.MIN_BLOCK_Y;
+  }
+  Blockly.Events.setGroup(false);
+  // Fire an event to allow scrollbars to resize.
+  this.resizeContents();
+};
