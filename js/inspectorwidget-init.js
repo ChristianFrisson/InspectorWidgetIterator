@@ -857,18 +857,18 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                             if (value || justDefined[type] !== null) {
                                 var workspace = Blockly.getMainWorkspace();
                                 var allBlocks = workspace.getAllBlocks();
-                                var block = (justDefined[type] === null) ? workspace.newBlock(blockType + 's_set') : justDefined[type];
+                                var blockDefine = (justDefined[type] === null) ? workspace.newBlock(blockType + 's_set') : justDefined[type];
 
-                                block.setFieldValue(x, 'X');
-                                block.setFieldValue(y, 'Y');
-                                block.setFieldValue(rx, 'W');
-                                block.setFieldValue(ry, 'H');
-                                block.setFieldValue(id, 'VIDEO');
-                                block.setFieldValue(time, 'TIME');
+                                blockDefine.setFieldValue(x, 'X');
+                                blockDefine.setFieldValue(y, 'Y');
+                                blockDefine.setFieldValue(rx, 'W');
+                                blockDefine.setFieldValue(ry, 'H');
+                                blockDefine.setFieldValue(id, 'VIDEO');
+                                blockDefine.setFieldValue(time, 'TIME');
                                 if (justDefined[type] === null) {
-                                    block.setFieldValue(value, valueType)
-                                    block.initSvg();
-                                    block.render();
+                                    blockDefine.setFieldValue(value, valueType)
+                                    blockDefine.initSvg();
+                                    blockDefine.render();
                                     workspace.cleanUp();
                                 } else {
                                     value = justDefined[type].getFieldValue(valueType);
@@ -880,11 +880,19 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                                         console.log('Error', err);
                                     } else {
                                         var url = '/data/' + id + '/' + value + '.png';
-                                        block.thumbnailMutator_.changeSrc(url);
+                                        blockDefine.thumbnailMutator_.changeSrc(url);
                                         justDefined[type] = null
                                     }
                                 }
                                 socket.emit('run', id, renameCode, renamed);
+
+                                if (justDefined[type] === null) {
+                                    var blockMatch = workspace.newBlock('match_' + blockType);
+                                    blockMatch.setFieldValue(value, valueType);
+                                    blockMatch.initSvg();
+                                    blockMatch.render();
+                                    workspace.cleanUp();
+                                }
                             }
                         }
                     })
@@ -1142,75 +1150,75 @@ function changeRecording(recordingId) {
             console.log('annotations Error', err);
             return;
         } else {*/
-            $("#player").resizable({
-                handles: 'e',
-                ghost: false,
-            });
-            $('#player').resize(function(event, ui) {
-                var x = event.clientX;
-                resizePlayerWidth(x);
-            })
-            $("#playercode").resizable({
-                handles: 's',
-                ghost: false,
-            });
-            $('#playercode').resize(function(event, ui) {
-                var y = ui.size.height;
-                var windowHeight = $('#window').height();
-                // from timelinePlugin updateComponentsLineHeight()
-                var element = $('#timeline');
-                var headerAndFooterHeight = parseFloat(element.find('.timeaxis').height() + element.find('.module-nav-bar-container').height());
-                $("#playercode").resizable("option", "maxHeight", windowHeight - headerAndFooterHeight);
-                var maxHeight = $(".selector").resizable("option", "maxHeight");
-                resizePlayerHeight(y);
-                element.find('.components').first().css('height', windowHeight - y - headerAndFooterHeight);
-                element.css("height", windowHeight - y);
-            })
-            $("#accessibilityViewer").resizable({
-                handles: 'e',
-                ghost: false,
-            });
-            $('#accessibilityViewer').resize(function(event, ui) {
-                var x = event.clientX;
-                var accessibilityViewerWidth = x - $('#player').width();
-                resizeAccessibilityViewerWidth(accessibilityViewerWidth);
-            })
-            window.addEventListener('resize', function(event) {
-                optimizePlayerHeight();
-            });
-            var blocklyDiv = document.getElementById('blocklyDiv');
-            if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
-                var workspace = Blockly.inject(blocklyDiv, {
-                    media: 'bower_components/blockly/media/',
-                    toolbox: document.getElementById('toolbox')
-                });
-                /* Enable this line to load a default annotation program */
-                Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'), workspace);
-            }
-            var blocklyControls = document.getElementById('blocklyControlsDiv');
-            createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
-            createButton(blocklyControls, 'saveCode', 'saveCode()', 'fa-download');
-            document.getElementById('saveCode').setAttribute('download', 'InspectorWidget.xml');
-            createButton(blocklyControls, 'runCode', 'runCode()', 'fa-play');
-            createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
-            createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
-            var annotations = [];
-            /*files.forEach(function(file) {
-                var stem = file.split('/').pop().split('.').reverse().pop();
-                var hyphens = stem.split('-');
-                var type = hyphens.pop();
-                var label = hyphens.pop();
-                var annotation = {
-                    name: label,
-                    segment: true,
-                    overlay: false,
-                    event: false,
-                    source: 'computer_vision'
-                }
-                annotations = annotations.concat(annotation);
-            });*/
-            var recordingPath = '/data/';
-            inspectorWidgetInit(recordingId, recordingPath, annotations);
+    $("#player").resizable({
+        handles: 'e',
+        ghost: false,
+    });
+    $('#player').resize(function(event, ui) {
+        var x = event.clientX;
+        resizePlayerWidth(x);
+    })
+    $("#playercode").resizable({
+        handles: 's',
+        ghost: false,
+    });
+    $('#playercode').resize(function(event, ui) {
+        var y = ui.size.height;
+        var windowHeight = $('#window').height();
+        // from timelinePlugin updateComponentsLineHeight()
+        var element = $('#timeline');
+        var headerAndFooterHeight = parseFloat(element.find('.timeaxis').height() + element.find('.module-nav-bar-container').height());
+        $("#playercode").resizable("option", "maxHeight", windowHeight - headerAndFooterHeight);
+        var maxHeight = $(".selector").resizable("option", "maxHeight");
+        resizePlayerHeight(y);
+        element.find('.components').first().css('height', windowHeight - y - headerAndFooterHeight);
+        element.css("height", windowHeight - y);
+    })
+    $("#accessibilityViewer").resizable({
+        handles: 'e',
+        ghost: false,
+    });
+    $('#accessibilityViewer').resize(function(event, ui) {
+        var x = event.clientX;
+        var accessibilityViewerWidth = x - $('#player').width();
+        resizeAccessibilityViewerWidth(accessibilityViewerWidth);
+    })
+    window.addEventListener('resize', function(event) {
+        optimizePlayerHeight();
+    });
+    var blocklyDiv = document.getElementById('blocklyDiv');
+    if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
+        var workspace = Blockly.inject(blocklyDiv, {
+            media: 'bower_components/blockly/media/',
+            toolbox: document.getElementById('toolbox')
+        });
+        /* Enable this line to load a default annotation program */
+        Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'), workspace);
+    }
+    var blocklyControls = document.getElementById('blocklyControlsDiv');
+    createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
+    createButton(blocklyControls, 'saveCode', 'saveCode()', 'fa-download');
+    document.getElementById('saveCode').setAttribute('download', 'InspectorWidget.xml');
+    createButton(blocklyControls, 'runCode', 'runCode()', 'fa-play');
+    createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
+    createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
+    var annotations = [];
+    /*files.forEach(function(file) {
+        var stem = file.split('/').pop().split('.').reverse().pop();
+        var hyphens = stem.split('-');
+        var type = hyphens.pop();
+        var label = hyphens.pop();
+        var annotation = {
+            name: label,
+            segment: true,
+            overlay: false,
+            event: false,
+            source: 'computer_vision'
+        }
+        annotations = annotations.concat(annotation);
+    });*/
+    var recordingPath = '/data/';
+    inspectorWidgetInit(recordingId, recordingPath, annotations);
     /*    }
     }
     socket.emit('annotations', recordingId, annotationsReceived);*/
