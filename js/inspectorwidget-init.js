@@ -208,7 +208,35 @@ inspectorWidgetListSegments = function(annotations) {
     return listOfSegments;
 };
 
+var annotationInProgress = [];
+
+annotationsInWorkspace = function() {
+    var annotations = [];
+    var workspace = Blockly.getMainWorkspace();
+    var blocks = workspace.getAllBlocks();
+    blocks.forEach(function(block) {
+        var accessibles = block.getAccessibles();
+        var templates = block.getTemplates();
+        var variables = accessibles.concat(templates);
+        variables.forEach(function(variable) {
+            var index = annotations.indexOf(variable);
+            if (index === -1) {
+                annotations = annotations.concat(variable);
+            }
+        })
+    })
+    return annotations;
+}
+
 updateAnnotations = function(recordingId, annotations) {
+    if (annotations.length === 0) {
+        if (annotationInProgress.length == 0) {
+            annotationInProgress = annotationsInWorkspace();
+        }
+        annotations = annotationInProgress;
+    }
+    console.log('annotations', annotations)
+
     function statusDone(id, err, results, phase, progress) {
         var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
         if (!timelinePlugin) {
@@ -227,63 +255,78 @@ updateAnnotations = function(recordingId, annotations) {
         var currentTime = progress * duration;
         var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
         if (err !== null) {
-            results.forEach(function(result) {
-                var error = null;
-                try {
-                    result = JSON.parse(result);
-                } catch (error) {
-                    console.log('Error ', error, ' parsing result ', result)
-                }
-                var data;
-                if (error === null && 'localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
-                    data = result;
-                    var metadataId = result.id;
-                    var name = result.id.split('-')[0];
-                    var type = result.id.split('-')[1];
-                    var source = result.source;
-                    /// Add annotation to timeline if not yet there
-                    if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
-                        var d = {
-                            name: name,
-                            segment: type === "segments",
-                            overlay: false,
-                            event: type === "events",
-                            source: source
-                        }
-                        var listOfLines = inspectorWidgetListLines([d]);
-                        timelinePlugin.createComponentsWithList(listOfLines)
-                        timelinePlugin.displayLinesNb += 1;
-                        timelinePlugin.settings.displayLines += 1;
-                        timelinePlugin.updateComponentsLineHeight();
-                        optimizePlayerHeight();
-                    }
-                    if (progress < 1 && progress !== 0) {
-                        data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
-                            "label": name,
-                            "tcin": currentTS,
-                            "tcout": durationTS,
-                            "tclevel": 1.0,
-                            "color": '#00ccff'
-                        });
-                    }
+            //results.forEach(function(result) {
+            var name = results[0];
+            var progress = parseFloat(results[1]);
+            var annotation = results[2];
 
-                    data = parser.processParserData(data);
-                    var viewControl = data.viewControl;
-                    var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
-                    player.player.updateBlockMetadata(data.id, {
-                        id: data.id,
-                        label: data.label,
-                        type: data.hasOwnProperty('type') ? data.type : 'default',
-                        author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : '',
-                        color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf',
-                        shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
-                    }, null);
-                    player.player.replaceAllMetadataById(data.id, data.list);
+            if (progress === 1.0) {
+                var index = annotationInProgress.indexOf(name);
+                if (index > -1) {
+                    console.log('Removing annotation with complete progress', name);
+                    annotationInProgress.splice(index, 1);
+                    console.log('Remaining annotations', annotationInProgress);
                 }
-            });
+
+            }
+            var error = null;
+            try {
+                result = JSON.parse(annotation);
+            } catch (error) {
+                console.log('Error ', error, ' parsing result ', result)
+            }
+            var data;
+            if (error === null && 'localisation' in result && result.localisation.length === 1 && 'sublocalisations' in result.localisation[0] && 'localisation' in result.localisation[0].sublocalisations) {
+                data = result;
+                var metadataId = result.id;
+                var name = result.id.split('-')[0];
+                var type = result.id.split('-')[1];
+                var source = result.source;
+                /// Add annotation to timeline if not yet there
+                if (timelinePlugin.isManagedMetadataId(metadataId) === false) {
+                    var d = {
+                        name: name,
+                        segment: type === "segments",
+                        overlay: false,
+                        event: type === "events",
+                        source: source
+                    }
+                    var listOfLines = inspectorWidgetListLines([d]);
+                    timelinePlugin.createComponentsWithList(listOfLines)
+                    timelinePlugin.displayLinesNb += 1;
+                    timelinePlugin.settings.displayLines += 1;
+                    timelinePlugin.updateComponentsLineHeight();
+                    optimizePlayerHeight();
+                }
+                if (progress < 1 && progress !== 0) {
+                    data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
+                        "label": name,
+                        "tcin": currentTS,
+                        "tcout": durationTS,
+                        "tclevel": 1.0,
+                        "color": '#00ccff'
+                    });
+                }
+
+                data = parser.processParserData(data);
+                var viewControl = data.viewControl;
+                var action = (data.viewControl !== null && data.viewControl.hasOwnProperty('action')) ? data.viewControl.action : '';
+                player.player.updateBlockMetadata(data.id, {
+                    id: data.id,
+                    label: data.label,
+                    type: data.hasOwnProperty('type') ? data.type : 'default',
+                    author: (viewControl !== null && viewControl.hasOwnProperty('author')) ? viewControl.author : '',
+                    color: (viewControl !== null && viewControl.hasOwnProperty('color')) ? viewControl.color : '#3cf',
+                    shape: (viewControl !== null && viewControl.hasOwnProperty('shape') && viewControl.shape !== "") ? viewControl.shape : 'circle'
+                }, null);
+                player.player.replaceAllMetadataById(data.id, data.list);
+            }
+            //});
         }
     }
-    socket.emit('annotationStatus', recordingId, annotations, statusDone);
+    annotations.forEach(function(annotation) {
+        socket.emit('annotationStatus', recordingId, annotation, statusDone);
+    })
 }
 /// Changes XML to JSON
 /// Adapted from http://stackoverflow.com/questions/28184804/drawing-a-collapsible-indented-tree-with-d3-xml-instead-of-d3-json
@@ -491,7 +534,7 @@ function click(d) {
 loadBasicAnnotations = function(recordingId, definitions) {
     var annotations = [];
     definitions.forEach(function(d) {
-        annotations = annotations.concat([d.variable]);
+        annotations = annotations.concat(d.variable);
     })
     /// Generate annotation definition syntax for InspectorWidgetProcessor
     var annotationDefinition = '';
@@ -1261,7 +1304,7 @@ runCode = function() {
                 timelinePlugin.createComponentsWithList(listOfLines)
                 timelinePlugin.displayLinesNb += 1;
                 timelinePlugin.settings.displayLines += 1;
-                updateAnnotations(recordingId,[template])
+                updateAnnotations(recordingId,[template)
             }
         }
     });*/
@@ -1276,7 +1319,7 @@ runCode = function() {
             console.log('Error', err);
             return;
         } else {
-            updateAnnotations(recordingId, []);
+            updateAnnotations(recordingId, annotationsInWorkspace());
             return;
         }
     }
