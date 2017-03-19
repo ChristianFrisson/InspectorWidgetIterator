@@ -260,15 +260,6 @@ updateAnnotations = function(recordingId, annotations) {
             var progress = parseFloat(results[1]);
             var annotation = results[2];
 
-            if (progress === 1.0) {
-                var index = annotationInProgress.indexOf(name);
-                if (index > -1) {
-                    console.log('Removing annotation with complete progress', name);
-                    annotationInProgress.splice(index, 1);
-                    console.log('Remaining annotations', annotationInProgress);
-                }
-
-            }
             var error = null;
             try {
                 result = JSON.parse(annotation);
@@ -297,6 +288,15 @@ updateAnnotations = function(recordingId, annotations) {
                     timelinePlugin.settings.displayLines += 1;
                     timelinePlugin.updateComponentsLineHeight();
                     optimizePlayerHeight();
+                }
+                if (progress === 1.0) {
+                    var index = annotationInProgress.indexOf(name);
+                    if (index > -1) {
+                        console.log('Removing annotation with complete progress', name);
+                        annotationInProgress.splice(index, 1);
+                        console.log('Remaining annotations', annotationInProgress);
+                    }
+
                 }
                 if (progress < 1 && progress !== 0) {
                     data.localisation[0].sublocalisations.localisation = data.localisation[0].sublocalisations.localisation.concat({
@@ -852,13 +852,11 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                 var rightcode = "=template(" + x + "," + y + "," + rx + "," + ry + ",'" + id + "'," + time + ")";
                 var extractCode = name + rightcode;
 
-                function extracted(src, err, result) {
+                function extracted(id, name, err) {
+                    console.log(err)
                     if (err) {
                         event.data.self.clearCanvas();
                     }
-                    /// Wrong id!
-                    tree = src.toString().split('/')
-                    var id = tree.length > 1 ? tree[tree.length - 2] : null;
 
                     vex.dialog.prompt({
                         unsafeMessage: 'You clicked on this ' + blockType + ' region:\
@@ -888,7 +886,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                                 }
                                 var renameCode = value + rightcode;
 
-                                function renamed(src, err, result) {
+                                function renamed(id, name, err) {
                                     if (err) {
                                         console.log('Error', err);
                                     } else {
@@ -897,7 +895,8 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                                         justDefined[type] = null
                                     }
                                 }
-                                socket.emit('run', id, renameCode, renamed);
+                                //socket.emit('run', id, renameCode, renamed);
+                                socket.emit('extractTemplate',id, value, x, y, rx, ry, time, renamed);
 
                                 if (justDefined[type] === null) {
                                     var blockMatch = workspace.newBlock('match_' + blockType);
@@ -925,7 +924,8 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                         }
                     })
                 }
-                socket.emit('run', id, extractCode, extracted);
+                //socket.emit('run', id, extractCode, extracted);
+                socket.emit('extractTemplate',id, name, x, y, rx, ry, time, extracted);
             }
 
             if (_shape !== null) {
@@ -1350,6 +1350,7 @@ runCode = function() {
 
     runDone = function(id, err, result) {
         clearInterval(timer);
+        annotationInProgress = [];
         $('#runCode')[0].disabled = false;
         $('#abort')[0].disabled = true;
         if (err) {
@@ -1385,6 +1386,7 @@ abort = function() {
     var recordings = document.getElementById('recordings');
     var recordingId = recordings.value;
     clearInterval(timer);
+    annotationInProgress = [];
     $('#runCode')[0].disabled = false;
     $('#abort')[0].disabled = true;
     socket.emit('abort', recordingId);

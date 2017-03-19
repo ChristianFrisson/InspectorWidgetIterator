@@ -133,6 +133,9 @@ io.on('connection', function (socket) {
     socket.on('accessibilityHover', function (id, time, x, y, done) {
         processor.accessibilityHover(id, time, x, y, done);
     });
+    socket.on('extractTemplate', function (id, name, x, y, w, h, time, done) {
+        processor.extractTemplate(id, name, x, y, w, h, time, done);
+    });
     socket.on('abort', function (id) {
         processor.abort(id);
     });
