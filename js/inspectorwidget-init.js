@@ -1137,11 +1137,11 @@ function changeRecording(recordingId) {
         return;
     }
 
-    function annotationsReceived(err, files) {
+    /*function annotationsReceived(err, files) {
         if (err) {
             console.log('annotations Error', err);
             return;
-        } else {
+        } else {*/
             $("#player").resizable({
                 handles: 'e',
                 ghost: false,
@@ -1195,7 +1195,7 @@ function changeRecording(recordingId) {
             createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
             createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
             var annotations = [];
-            files.forEach(function(file) {
+            /*files.forEach(function(file) {
                 var stem = file.split('/').pop().split('.').reverse().pop();
                 var hyphens = stem.split('-');
                 var type = hyphens.pop();
@@ -1208,12 +1208,12 @@ function changeRecording(recordingId) {
                     source: 'computer_vision'
                 }
                 annotations = annotations.concat(annotation);
-            });
+            });*/
             var recordingPath = '/data/';
             inspectorWidgetInit(recordingId, recordingPath, annotations);
-        }
+    /*    }
     }
-    socket.emit('annotations', recordingId, annotationsReceived);
+    socket.emit('annotations', recordingId, annotationsReceived);*/
 }
 var recordings = document.getElementById('recordings');
 recordings.onchange = function() {
