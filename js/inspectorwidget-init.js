@@ -248,17 +248,19 @@ updateAnnotations = function(recordingId, annotations) {
             console.log('Could not access amalia.js player');
             return;
         }
-        var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
-        var duration = $(".ajs").data('fr.ina.amalia.player').player.getDuration();
-        var fps = $(".ajs").data('fr.ina.amalia.player').player.settings.framerate;
-        var durationTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(duration, fps, 'mms');
-        var currentTime = progress * duration;
-        var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
         if (err !== null) {
             //results.forEach(function(result) {
             var name = results[0];
-            var progress = parseFloat(results[1]);
+            var annotationProgress = parseFloat(results[1]);
             var annotation = results[2];
+
+            var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
+            var duration = $(".ajs").data('fr.ina.amalia.player').player.getDuration();
+            var fps = $(".ajs").data('fr.ina.amalia.player').player.settings.framerate;
+            var durationTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(duration, fps, 'mms');
+            if(annotationProgress > progress) progress = annotationProgress;
+            var currentTime = progress * duration;
+            var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
 
             var error = null;
             try {
