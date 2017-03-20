@@ -258,7 +258,7 @@ updateAnnotations = function(recordingId, annotations) {
             var duration = $(".ajs").data('fr.ina.amalia.player').player.getDuration();
             var fps = $(".ajs").data('fr.ina.amalia.player').player.settings.framerate;
             var durationTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(duration, fps, 'mms');
-            if(annotationProgress > progress) progress = annotationProgress;
+            if (annotationProgress > progress) progress = annotationProgress;
             var currentTime = progress * duration;
             var currentTS = fr.ina.amalia.player.helpers.UtilitiesHelper.formatTime(currentTime, fps, 'mms')
 
@@ -572,17 +572,58 @@ loadBasicAnnotations = function(recordingId, definitions) {
     socket.emit('run', recordingId, annotationDefinition, annotationDone);
 }
 
-definitionBlocksOnTop = function(){
-  var workspace = Blockly.getMainWorkspace();
-  workspace.cleanUp();
-  var cursorY = 0;
-  workspace.getAllBlocks().reverse().forEach(function(block){
-    if(block.type === "accessibles_set" || block.type === "templates_set"){
-      cursorY += block.height;
-      block.translate(0, -cursorY);
+definitionBlocksOnTop = function() {
+    var workspace = Blockly.getMainWorkspace();
+    workspace.cleanUp();
+    var cursorY = 0;
+    workspace.getAllBlocks().reverse().forEach(function(block) {
+        if (block.type === "accessibles_set" || block.type === "templates_set") {
+            cursorY += block.height;
+            block.translate(0, -cursorY);
+        }
+    })
+    workspace.cleanUp();
+}
+
+function onBlocksDeleted(event) {
+    if (event.type == Blockly.Events.DELETE) {
+        /// Determine the name and variable type of the block just deleted
+        var oldXml = event.oldXml;
+        if (oldXml.nodeName === "BLOCK" && oldXml.children && oldXml.attributes) {
+            var blockType, varType, varName;
+            for (var i = 0; i < oldXml.attributes.length; i++) {
+                if (oldXml.attributes.item(i).name === "type") {
+                    blockType = oldXml.attributes.item(i).value;
+                }
+            }
+            if (blockType.toString().match("accessib") !== null) {
+                varType = "ACCESSIBLE";
+            } else if (blockType.toString().match("template") !== null) {
+                varType = "TEMPLATE";
+            } else {
+                varType = "VAR";
+            }
+            for (var i = 0; i < oldXml.childNodes.length; i++) {
+                var child = oldXml.childNodes.item(i);
+                if (child.nodeName === "FIELD") {
+                    for (var j = 0; j < child.attributes.length; j++) {
+                        if (child.attributes.item(j).name === "name" && child.attributes.item(j).value === varType && child.childNodes.length === 1) {
+                            varName = child.childNodes.item(0).nodeValue;
+                        }
+                    }
+                }
+            }
+
+            /// Delete the corresponding timeline line
+            var annotations = [{
+                name: varName,
+                segment: true,
+                overlay: false,
+                event: true
+            }];
+            inspectorWidgetRemoveAnnotations(annotations);
+        }
     }
-  })
-  workspace.cleanUp();
 }
 
 var justDefined = {
@@ -898,7 +939,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                                     }
                                 }
                                 //socket.emit('run', id, renameCode, renamed);
-                                socket.emit('extractTemplate',id, value, x, y, rx, ry, time, renamed);
+                                socket.emit('extractTemplate', id, value, x, y, rx, ry, time, renamed);
 
                                 if (justDefined[type] === null) {
                                     var blockMatch = workspace.newBlock('match_' + blockType);
@@ -909,9 +950,9 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                                     if (topBlocks.length > 0) {
                                         var prevBlock = topBlocks[0];
                                         var nextConn = prevBlock.nextConnection;
-                                        while(prevBlock.getNextBlock()){
-                                          prevBlock = prevBlock.getNextBlock();
-                                          nextConn = prevBlock.nextConnection;
+                                        while (prevBlock.getNextBlock()) {
+                                            prevBlock = prevBlock.getNextBlock();
+                                            nextConn = prevBlock.nextConnection;
                                         }
                                         var prevConn = blockMatch.previousConnection;
                                         if (nextConn && prevConn) {
@@ -927,7 +968,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                     })
                 }
                 //socket.emit('run', id, extractCode, extracted);
-                socket.emit('extractTemplate',id, name, x, y, rx, ry, time, extracted);
+                socket.emit('extractTemplate', id, name, x, y, rx, ry, time, extracted);
             }
 
             if (_shape !== null) {
@@ -988,6 +1029,8 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                 event.data.self.drawingHandler.hide();
             }
         });
+        var workspace = Blockly.getMainWorkspace();
+        workspace.addChangeListener(onBlocksDeleted);
     });
 };
 inspectorWidgetFindPlugin = function(pluginClass) {
@@ -1006,7 +1049,7 @@ inspectorWidgetFindPlugin = function(pluginClass) {
     }
     return null;
 };
-inspectorWidgetRemoveAnnotations = function(recordingId, recordingPath, annotations) {
+inspectorWidgetRemoveAnnotations = function(annotations) {
     var timelinePlugin = inspectorWidgetFindPlugin('TimelinePlugin');
     if (!timelinePlugin) {
         console.log('Could not access amalia.js timeline plugin');
@@ -1028,7 +1071,15 @@ inspectorWidgetRemoveAnnotations = function(recordingId, recordingPath, annotati
         })
     }
     annotations.forEach(function(annotation) {
-        var deleteMetadataId = annotation.name + '-segments';
+      var suffices = [];
+      if(annotation.event === true){
+        suffices = suffices.concat('-events')
+      }
+      if(annotation.segment === true){
+        suffices = suffices.concat('-segments')
+      }
+      suffices.forEach(function(suffix){
+        var deleteMetadataId = annotation.name + suffix;
         var managedMetadataIds = timelinePlugin.managedMetadataIds.length;
         if (timelinePlugin.isManagedMetadataId(deleteMetadataId) !== -1) {
             timelinePlugin.deleteComponentsWithMetadataId(deleteMetadataId);
@@ -1039,8 +1090,10 @@ inspectorWidgetRemoveAnnotations = function(recordingId, recordingPath, annotati
                 removeMetadataId(fields, deleteMetadataId);
             }
         }
+      })
     });
     timelinePlugin.updateComponentsLineHeight();
+    optimizePlayerHeight();
 };
 inspectorWidgetAddAnnotations = function(recordingId, recordingPath, annotations) {
     var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
@@ -1427,17 +1480,17 @@ Blockly.FieldAccessible.prototype.defineAccessibleCallback = function(caller, na
 
 // Overload the workspace clean up function to compress vertical space
 Blockly.WorkspaceSvg.prototype.cleanUp = function() {
-  Blockly.Events.setGroup(true);
-  var topBlocks = this.getTopBlocks(true);
-  var cursorY = 0;
-  for (var i = 0, block; block = topBlocks[i]; i++) {
-    var xy = block.getRelativeToSurfaceXY();
-    block.moveBy(-xy.x, cursorY - xy.y);
-    block.snapToGrid();
-    cursorY = block.getRelativeToSurfaceXY().y +
-        block.getHeightWidth().height;// + Blockly.BlockSvg.MIN_BLOCK_Y;
-  }
-  Blockly.Events.setGroup(false);
-  // Fire an event to allow scrollbars to resize.
-  this.resizeContents();
+    Blockly.Events.setGroup(true);
+    var topBlocks = this.getTopBlocks(true);
+    var cursorY = 0;
+    for (var i = 0, block; block = topBlocks[i]; i++) {
+        var xy = block.getRelativeToSurfaceXY();
+        block.moveBy(-xy.x, cursorY - xy.y);
+        block.snapToGrid();
+        cursorY = block.getRelativeToSurfaceXY().y +
+            block.getHeightWidth().height; // + Blockly.BlockSvg.MIN_BLOCK_Y;
+    }
+    Blockly.Events.setGroup(false);
+    // Fire an event to allow scrollbars to resize.
+    this.resizeContents();
 };
