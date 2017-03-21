@@ -53,11 +53,11 @@ Blockly.prompt = function(message, defaultValue, callback) {
 var timer;
 socket.on('result', function(data) {
     console.log('Result: ', data)
-    alert('Result: ' + data);
+    vex.dialog.alert('Result: ' + data);
 });
 socket.on('error', function(msg) {
     console.log('Error: ', msg)
-    alert('Error: ' + msg);
+    vex.dialog.alert('Error: ' + msg);
 });
 var segmentsSuffix = '-segments';
 var overlaysSuffix = '-overlays';
@@ -718,7 +718,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
 
         inputEventsAvailable = function(err, files) {
             if (err) {
-                alert('No accessibility information available')
+                vex.dialog.alert('No accessibility information available')
             } else {
                 var definitions = [{
                     'variable': 'Words',
@@ -742,7 +742,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
 
             axAvailable = function(err, files) {
                 if (err) {
-                    alert('No accessibility information available')
+                    vex.dialog.alert('No accessibility information available')
                     return;
                 } else {
                     /// Accessibility on mouse hover
@@ -1320,7 +1320,7 @@ showCode = function() {
     // Generate JavaScript code and display it.
     Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
     var code = Blockly.JavaScript.workspaceToCode(workspace);
-    alert(code);
+    vex.dialog.alert(code);
 }
 
 processStatus = function() {
@@ -1330,18 +1330,18 @@ processStatus = function() {
     function done(id, err, result, phase, progress) {
         if (err) {
             console.log('Error', err);
-            alert('Error: ' + err)
+            vex.dialog.alert('Error: ' + err)
             //io.emit('error', err);
             return;
         } else {
             console.log('Result', result);
-            alert('Result: ' + result)
+            vex.dialog.alert('Result: ' + result)
             //io.emit('result', result);
             return;
         }
     }
     if (socket.connected === false) {
-        alert('InspectorWidgetProcessor server disconnected.');
+        vex.dialog.alert('InspectorWidgetProcessor server disconnected.');
         return;
     }
     socket.emit('status', recordingId, done);
@@ -1363,7 +1363,7 @@ runCode = function() {
     }
     var parser = new fr.ina.amalia.player.parsers.BaseParserMetadata({});
     if (socket.connected === false) {
-        alert('InspectorWidgetProcessor server disconnected.');
+        vex.dialog.alert('InspectorWidgetProcessor server disconnected.');
         return;
     }
     // Generate JavaScript code and run it.
