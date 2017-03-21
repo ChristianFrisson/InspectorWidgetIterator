@@ -20,32 +20,29 @@ function isPathWritable(path) {
     try {
         fs.accessSync(path, fs.W_OK);
         return true;
-    }
-    catch (e) {
+    } catch (e) {
         return false;
     }
 }
 
 console.log('Usage: optional argument for setting data path: --datapath=')
 
-if (process.argv.length >= 2 && process.argv[process.argv.length-1].toString().startsWith('--datapath=') ){
-  var datapatharg = process.argv[process.argv.length-1].toString()
-   var datapathcheck = datapatharg.split('--datapath=')
-   if(datapathcheck.length === 2){
-     var path = datapathcheck[1];
-     if(isPathWritable(path)){
-        datapath = path;
-        console.log('Using data path',datapath);
-     }
-     else{
-       console.log('Desired data path not writable',path);
-       return;
-     }
-   }
-   else{
-     console.log('Wrong data path argument',datapatharg)
-     return;
-   }
+if (process.argv.length >= 2 && process.argv[process.argv.length - 1].toString().startsWith('--datapath=')) {
+    var datapatharg = process.argv[process.argv.length - 1].toString()
+    var datapathcheck = datapatharg.split('--datapath=')
+    if (datapathcheck.length === 2) {
+        var path = datapathcheck[1];
+        if (isPathWritable(path)) {
+            datapath = path;
+            console.log('Using data path', datapath);
+        } else {
+            console.log('Desired data path not writable', path);
+            return;
+        }
+    } else {
+        console.log('Wrong data path argument', datapatharg)
+        return;
+    }
 }
 
 if (datapath === undefined || datapath === null) {
@@ -55,7 +52,7 @@ if (datapath === undefined || datapath === null) {
     if (isPathWritable(path)) {
         glob(path + "/Dummy.json", {
             cwd: path
-        }, function (er, files) {
+        }, function(er, files) {
             if (files.length === 0) {
                 var encoding = 'utf8';
                 var content = '';
@@ -71,7 +68,7 @@ if (datapath === undefined || datapath === null) {
 if (isPathWritable(datapath)) {
     glob(datapath + "/Dummy.json", {
         cwd: datapath
-    }, function (er, files) {
+    }, function(er, files) {
         if (files.length === 0) {
             var encoding = 'utf8';
             var content = '';
@@ -86,67 +83,70 @@ app.use('/css', express.static(__dirname + '/css'))
 app.use('/js', express.static(__dirname + '/js'))
 app.use('/build', express.static(__dirname + '/build'))
 app.use('/data/', express.static(datapath))
-app.get('/', function (req, res) {
+app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
-io.on('connection', function (socket) {
+io.on('connection', function(socket) {
     console.log('user connected');
-    socket.on('disconnect', function () {
+    socket.on('disconnect', function() {
         console.log('user disconnected');
     });
-    socket.on('run', function (id, code, done) {
+    socket.on('run', function(id, code, done) {
         function buffer_done(id, err, result) {
-            glob(id + "/*-segments.json", {
-                cwd: datapath
-            }, function (er, files) {
-                console.log(er, files)
-                if (files) {
-                    var annotations = [];
-                    files.forEach(function (file) {
-                        var stem = file.split('/').pop().split('.').reverse().pop();
-                        var hyphens = stem.split('-');
-                        var type = hyphens.pop();
-                        var label = hyphens.pop();
-                        var annotation = {
-                            name: label
-                            , segment: true
-                            , overlay: false
-                            , type: 'cv:tm'
-                        }
-                        annotations = annotations.concat(annotation);
-                    });
-                    done(id, '', annotations);
-                }
-                else {
-                    done(id, er, '');
-                }
-            })
+            if (err) {
+                done(id, err, '')
+            } else {
+                glob(id + "/*-segments.json", {
+                    cwd: datapath
+                }, function(er, files) {
+                    console.log(er, files)
+                    if (files) {
+                        var annotations = [];
+                        files.forEach(function(file) {
+                            var stem = file.split('/').pop().split('.').reverse().pop();
+                            var hyphens = stem.split('-');
+                            var type = hyphens.pop();
+                            var label = hyphens.pop();
+                            var annotation = {
+                                name: label,
+                                segment: true,
+                                overlay: false,
+                                type: 'cv:tm'
+                            }
+                            annotations = annotations.concat(annotation);
+                        });
+                        done(id, '', annotations);
+                    } else {
+                        done(id, er, '');
+                    }
+                })
+            }
         }
         processor.run(datapath + '/' + id + '/', id + '.mp4', code, buffer_done);
     });
-    socket.on('status', function (id, done) {
+    socket.on('status', function(id, done) {
         processor.status(id, done);
     });
-    socket.on('annotationStatus', function (id, names, done) {
+    socket.on('annotationStatus', function(id, names, done) {
         processor.annotationStatus(id, names, done);
     });
-    socket.on('accessibilityHover', function (id, time, x, y, done) {
+    socket.on('accessibilityHover', function(id, time, x, y, done) {
         processor.accessibilityHover(id, time, x, y, done);
     });
-    socket.on('extractTemplate', function (id, name, x, y, w, h, time, done) {
+    socket.on('extractTemplate', function(id, name, x, y, w, h, time, done) {
         processor.extractTemplate(id, name, x, y, w, h, time, done);
     });
-    socket.on('abort', function (id) {
+    socket.on('abort', function(id) {
         processor.abort(id);
     });
-    socket.on('ids', function (done) {
+    socket.on('ids', function(done) {
         glob("*/*.mp4", {
             cwd: datapath
-        }, function (er, files) {
+        }, function(er, files) {
             console.log(er, files)
             var ids = [];
             if (files) {
-                files.forEach(function (file) {
+                files.forEach(function(file) {
                     var id = file.split('/')[0];
                     console.log('Available project file', id)
                     ids = ids.concat(id)
@@ -156,46 +156,43 @@ io.on('connection', function (socket) {
             console.log('ids', ids)
         })
     });
-    socket.on('annotations', function (id, done) {
+    socket.on('annotations', function(id, done) {
         glob(id + "/*-segments.json", {
             cwd: datapath
-        }, function (er, files) {
+        }, function(er, files) {
             console.log(er, files)
             if (files) {
                 done('', files);
-            }
-            else {
+            } else {
                 done(er, '');
             }
         })
     });
-    socket.on('inputEventsAvailable', function (id, done) {
+    socket.on('inputEventsAvailable', function(id, done) {
         glob(id + "/" + id + ".txt", {
             cwd: datapath
-        }, function (er, files) {
+        }, function(er, files) {
             console.log(er, files)
             if (files) {
                 done('', files);
-            }
-            else {
+            } else {
                 done(er, '');
             }
         })
     });
-    socket.on('accessibilityAvailable', function (id, done) {
+    socket.on('accessibilityAvailable', function(id, done) {
         glob(id + "/" + id + ".xml", {
             cwd: datapath
-        }, function (er, files) {
+        }, function(er, files) {
             console.log(er, files)
             if (files) {
                 done('', files);
-            }
-            else {
+            } else {
                 done(er, '');
             }
         })
     });
 });
-http.listen(port, function () {
+http.listen(port, function() {
     console.log('listening on *:' + port);
 });

@@ -1071,26 +1071,26 @@ inspectorWidgetRemoveAnnotations = function(annotations) {
         })
     }
     annotations.forEach(function(annotation) {
-      var suffices = [];
-      if(annotation.event === true){
-        suffices = suffices.concat('-events')
-      }
-      if(annotation.segment === true){
-        suffices = suffices.concat('-segments')
-      }
-      suffices.forEach(function(suffix){
-        var deleteMetadataId = annotation.name + suffix;
-        var managedMetadataIds = timelinePlugin.managedMetadataIds.length;
-        if (timelinePlugin.isManagedMetadataId(deleteMetadataId) !== -1) {
-            timelinePlugin.deleteComponentsWithMetadataId(deleteMetadataId);
-            var _managedMetadataIds = timelinePlugin.managedMetadataIds.length;
-            if (_managedMetadataIds - managedMetadataIds === -1) {
-                timelinePlugin.displayLinesNb -= 1;
-                timelinePlugin.settings.displayLines -= 1;
-                removeMetadataId(fields, deleteMetadataId);
-            }
+        var suffices = [];
+        if (annotation.event === true) {
+            suffices = suffices.concat('-events')
         }
-      })
+        if (annotation.segment === true) {
+            suffices = suffices.concat('-segments')
+        }
+        suffices.forEach(function(suffix) {
+            var deleteMetadataId = annotation.name + suffix;
+            var managedMetadataIds = timelinePlugin.managedMetadataIds.length;
+            if (timelinePlugin.isManagedMetadataId(deleteMetadataId) !== -1) {
+                timelinePlugin.deleteComponentsWithMetadataId(deleteMetadataId);
+                var _managedMetadataIds = timelinePlugin.managedMetadataIds.length;
+                if (_managedMetadataIds - managedMetadataIds === -1) {
+                    timelinePlugin.displayLinesNb -= 1;
+                    timelinePlugin.settings.displayLines -= 1;
+                    removeMetadataId(fields, deleteMetadataId);
+                }
+            }
+        })
     });
     timelinePlugin.updateComponentsLineHeight();
     optimizePlayerHeight();
@@ -1409,6 +1409,7 @@ runCode = function() {
         $('#runCode')[0].disabled = false;
         $('#abort')[0].disabled = true;
         if (err) {
+            vex.dialog.alert(err);
             console.log('Error', err);
             return;
         } else {
