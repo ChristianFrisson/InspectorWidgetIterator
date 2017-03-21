@@ -596,6 +596,9 @@ function onBlocksDeleted(event) {
                     blockType = oldXml.attributes.item(i).value;
                 }
             }
+            if (blockType.toString().match("_get") !== null) {
+                return;
+            }
             if (blockType.toString().match("accessib") !== null) {
                 varType = "ACCESSIBLE";
             } else if (blockType.toString().match("template") !== null) {
