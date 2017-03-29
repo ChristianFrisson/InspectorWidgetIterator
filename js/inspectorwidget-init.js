@@ -718,7 +718,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
 
         inputEventsAvailable = function(err, files) {
             if (err) {
-                vex.dialog.alert('No accessibility information available')
+                vex.dialog.alert('No input events information available')
             } else {
                 var definitions = [{
                     'variable': 'Words',
@@ -765,8 +765,8 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                         'action': 'getPointedWidget',
                         'type': 'accessibility_actions'
                     }, {
-                        'variable': 'WorkspaceSnapshot',
-                        'action': 'getWorkspaceSnapshot',
+                        'variable': 'ApplicationSnapshot',
+                        'action': 'trackApplicationSnapshot',
                         'type': 'accessibility_actions'
                     }];
 
