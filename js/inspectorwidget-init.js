@@ -906,7 +906,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
 
                     vex.dialog.prompt({
                         unsafeMessage: 'You clicked on this ' + blockType + ' region:\
-                                <br/><img style="width:100%" src="data/' + id + '/' + name + '.png"/>\
+                                <br/><img style="max-width:100%;max-height:100%;" src="data/' + id + '/' + name + '.png"/>\
                                 <br/>' + ((justDefined[type] === null) ? 'Please give it a name if you want to annotate it:' : 'Annotate it under name ' + justDefined[type].getFieldValue(valueType) + '?'),
                         placeholder: justDefined[type] ? justDefined[type].getFieldValue(valueType) : '',
                         callback: function(value) {
