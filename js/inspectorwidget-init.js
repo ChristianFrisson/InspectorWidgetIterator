@@ -290,6 +290,7 @@ updateAnnotations = function(recordingId, annotations) {
                     timelinePlugin.settings.displayLines += 1;
                     timelinePlugin.updateComponentsLineHeight();
                     optimizePlayerHeight();
+                    optimizePlayerWidth();
                 }
                 if (progress === 1.0) {
                     var index = annotationInProgress.indexOf(name);
@@ -707,6 +708,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
         inspectorWidgetAddAnnotations(recordingId, recordingPath, annotations)
 
         optimizePlayerHeight();
+        optimizePlayerWidth();
 
         inspectorWidgetPlugin = inspectorWidgetFindPlugin('InspectorWidgetPlugin');
         if (!inspectorWidgetPlugin) {
@@ -746,7 +748,13 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                     return;
                 } else {
                     /// Accessibility on mouse hover
-                    d3.select("#accessibilityViewer").append("svg").attr("id", "accessibilityViewerSvg").attr("width", accessibilityTreeWidth + accessibilityTreeMargin.left + accessibilityTreeMargin.right).attr("height", accessibilityTreeHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom).append("g").attr("id", "accessibilityViewerCanvas").attr("transform", "translate(" + accessibilityTreeMargin.left + "," + accessibilityTreeMargin.top + ")");
+                    d3.select("#accessibilityViewer")
+                    .append("svg")
+                    .attr("id", "accessibilityViewerSvg")
+                    .attr("width", accessibilityTreeWidth + accessibilityTreeMargin.left + accessibilityTreeMargin.right)
+                    .attr("height", accessibilityTreeHeight + accessibilityTreeMargin.top + accessibilityTreeMargin.bottom)
+                    .append("g").attr("id", "accessibilityViewerCanvas")
+                    .attr("transform", "translate(" + accessibilityTreeMargin.left + "," + accessibilityTreeMargin.top + ")");
                     resizeAccessibilityViewerWidth(accessibilityTreeWidth);
 
                     inspectorWidgetPlugin.axAvailable = true;
@@ -1097,6 +1105,7 @@ inspectorWidgetRemoveAnnotations = function(annotations) {
     });
     timelinePlugin.updateComponentsLineHeight();
     optimizePlayerHeight();
+    //optimizePlayerWidth();
 };
 inspectorWidgetAddAnnotations = function(recordingId, recordingPath, annotations) {
     var player = $(".ajs").data('fr.ina.amalia.player'); //.player.pluginManager.plugins;
@@ -1211,6 +1220,20 @@ optimizePlayerHeight = function() {
     resizePlayerHeight($('#window').height() - $("#timeline").height());
 }
 
+optimizePlayerWidth = function() {
+  var availableWidth = $('#playercode').width() - accessibilityTreeWidth*2;
+  var availableHeight = $('#window').height() - $("#timeline").height();
+  var videoWidth = $('.player')[0].videoWidth;
+  var videoHeight = $('.player')[0].videoHeight;
+  var idealWidth = availableHeight*videoWidth/videoHeight;
+  var w = idealWidth<availableWidth?idealWidth:availableWidth;
+  $('#code').width($('#playercode').width()-w);
+  $('#blockly').width($('#playercode').width()-w-accessibilityTreeWidth-10);
+  $('#player').width(w);
+  var workspace = Blockly.getMainWorkspace();
+  Blockly.svgResize(workspace);
+}
+
 function createButton(container, id, callback, iconId) {
     if (document.getElementById(id) === null) {
         var button = document.createElement('a');
@@ -1271,6 +1294,7 @@ function changeRecording(recordingId) {
     })
     window.addEventListener('resize', function(event) {
         optimizePlayerHeight();
+        optimizePlayerWidth();
     });
     var blocklyDiv = document.getElementById('blocklyDiv');
     if (blocklyDiv !== null && blocklyDiv.childElementCount === 0) {
@@ -1405,6 +1429,7 @@ runCode = function() {
     });*/
     timelinePlugin.updateComponentsLineHeight();
     optimizePlayerHeight();
+    optimizePlayerWidth();
 
     runDone = function(id, err, result) {
         clearInterval(timer);
