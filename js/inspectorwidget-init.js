@@ -701,6 +701,8 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
     };
     var f = $("#defaultPlayer").mediaPlayer(settings);
 
+    socket.emit('run', recordingId, '', function(){});
+
     resizePlayerHeight($('#window').height() - $("#timeline").height());
     f.on(fr.ina.amalia.player.PlayerEventType.STARTED, {
         self: f
@@ -739,7 +741,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                     'action': 'getModifierKeysPressed',
                     'type': 'input_events_actions'
                 }];
-                loadBasicAnnotations(recordingId, definitions);
+                //loadBasicAnnotations(recordingId, definitions);
             }
 
             axAvailable = function(err, files) {
@@ -778,7 +780,7 @@ inspectorWidgetInit = function(recordingId, recordingPath, annotations) {
                         'type': 'accessibility_actions'
                     }];
 
-                    loadBasicAnnotations(recordingId, definitions);
+                    //loadBasicAnnotations(recordingId, definitions);
                 }
             };
             socket.emit('accessibilityAvailable', recordingId, axAvailable);
@@ -1306,12 +1308,12 @@ function changeRecording(recordingId) {
         Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'), workspace);
     }
     var blocklyControls = document.getElementById('blocklyControlsDiv');
-    createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
+    //createButton(blocklyControls, 'showCode', 'showCode()', 'fa-info-circle');
     createButton(blocklyControls, 'saveCode', 'saveCode()', 'fa-download');
     document.getElementById('saveCode').setAttribute('download', 'InspectorWidget.xml');
     createButton(blocklyControls, 'runCode', 'runCode()', 'fa-play');
     createButton(blocklyControls, 'abort', 'abort()', 'fa-stop');
-    createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
+    //createButton(blocklyControls, 'processStatus', 'processStatus()', 'fa-question-circle');
     var annotations = [];
     /*files.forEach(function(file) {
         var stem = file.split('/').pop().split('.').reverse().pop();
